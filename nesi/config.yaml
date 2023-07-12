@@ -1,0 +1,28 @@
+cluster:
+    sbatch
+        --parsable
+        --partition {resources.partition}
+        --account {config[account]}
+        --time {resources.time_min}
+        --mem {resources.mem_mb}
+        --cpus-per-task {resources.cpus}
+        --output nesi/logs/%j-{rule}.out
+        --error nesi/logs/%j-{rule}.out
+        --job-name snakejob-{rule}
+default-resources:
+    - partition=milan
+    - cpus=1
+    - mem_mb=512
+    - time_min=5
+cluster-status: "slurm-status.py"
+cluster-sidecar: "slurm-sidecar.py"
+cluster-cancel: "scancel"
+jobs: 1000
+max-jobs-per-second: 10
+max-status-checks-per-second: 10
+local-cores: 1
+latency-wait: 20
+restart-times: 0
+printshellcmds: True
+use-singularity: True
+singularity-args: "--cleanenv"
