@@ -1,0 +1,92 @@
+configfile: "config/config.yaml"
+
+# TODO add final output
+rule all:
+    
+
+rule hd_bet:
+    input:
+        "T1_W_post/{subject}/Post_{subject}.nii.gz"
+    output:
+        "T1_W_post/T1_Brain/Post_{subject}_brain"
+    conda:
+        "envs/hd_bet.yaml"
+    shell:
+        "hd-bet -i {input}-o {output} -tta 0 -mode fast -device cpu"
+
+# TODO convert as a rule
+# singularity run -e \
+# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/INPUTS/Pre_{subject}:/INPUTS \
+# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/OUTPUTS/Pre_{subject}:/OUTPUTS \
+# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/license.txt:/extra/freesurfer/license.txt \
+# /hpc/mtay316/B0_synth/synb0-disco_v3.0.sif
+
+rule convert_pre_denoise:
+    input:
+        data="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.nii",
+        bvecs="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bvec",
+        bvals="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bval"
+    output:
+        "BIDS_Processing/Pre_{subject}/dwi_{subject}.mif"
+    shell:
+        "mrconvert {input.data} -fslgrad {input.bvecs} {input.bvals} {output}"
+
+rule denoise:
+    input:
+        dwi="BIDS_Processing/Pre_{subject}/dwi_{subject}.mif",
+        noise="BIDS_Processing/Pre_{subject}/noise_{subject}.mif"
+    output:
+        "BIDS_Processing/Pre_{subject}/dwi_denoise_{subject}.mif"
+    shell:
+        "dwidenoise {input.dwi} {output} -noise {input.noise}"
+
+rule convert_post_denoise:
+    input:
+        "BIDS_Processing/Pre_{subject}/dwi_brain_mask_{subject}.nii.gz"
+    output:
+        "BIDS_Processing/Pre_{subject}/dwi_mask_{subject}.mif"
+    container:
+        "docker://mrtrix3/mrtrix3:3.0.4"
+    shell:
+        "mrconvert {input} {output}"
+
+rule bias_correction:
+    message: "Bias field correction"
+    input:
+        data="BIDS_Processing/Pre_{subject}/dwi_denoise_{subject}.mif",
+        mask="BIDS_Processing/Pre_{subject}/dwi_mask_{subject}.mif",
+        bias="BIDS_Processing/Pre_{subject}/bias_{subject}.mif"
+    output:
+        "BIDS_Processing/Pre_{subject}/dwidnbc_{subject}.mif"
+    container:
+        "docker://mrtrix3/mrtrix3:3.0.4"
+    shell:
+        "dwibiascorrect fsl {input.data} {output} -mask {input.mask} -bias {input.bias}"
+
+rule ringing_correction:
+    message: "Ringing artifact correction"
+    input:
+        "BIDS_Processing/Pre_{subject}/dwidnbc_{subject}.mif"
+    output:
+        "BIDS_Processing/Pre_{subject}/dwidnbcdegibbs_{subject}.mif"
+    container:
+        "docker://mrtrix3/mrtrix3:3.0.4"
+    shell:
+        "mrdegibbs {input} {output}"
+
+rule convert_post_ringing:
+    input:
+        "BIDS_Processing/Pre_{subject}/dwidnbcdegibbs_{subject}.mif"
+    output:
+        "BIDS_Processing/Pre_{subject}/dwidnbcdg_{subject}.nii.gz"
+    container:
+        "docker://mrtrix3/mrtrix3:3.0.4"
+    shell:
+        "mrconvert {input} {output}"
+
+# NOTE: Remeber to put the index.txt and acqparams.txt files in the right folder
+
+# TODO convert as a rule
+# echo "Eddy current correction"
+# scp DWI_W_pre/Pre_{subject}/index.txt BIDS_Processing/Pre_{subject}
+#eddy_cuda9.1 --imain=BIDS_Processing/Pre_{subject}/dwidnbcdg_{subject}.nii.gz --mask=BIDS_Processing/Pre_{subject}/dwi_brain_mask_{subject} --index=BIDS_Processing/Pre_{subject}/index.txt --acqp=b0_synth/INPUTS/acqparams.txt --bvecs=BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bvec --bvals=BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bval --fwhm=0 --topup=b0_synth/OUTPUTS/Pre_{subject}/topup --flm=quadratic --cnr_maps --out=BIDS_Processing/Pre_{subject}/eddy_unwarped_{subject} --repol --mporder=6 -v
