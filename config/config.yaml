@@ -1,3 +1,3 @@
-datadir: ""
-resultsdir: ""
+datadir: "/nesi/nobackup/uoa03264/dti_pipeline_data/dicom"
+resultsdir: "/nesi/nobackup/uoa03264/dti_pipeline_data/processed"
 fs_license: "fs_license.txt"

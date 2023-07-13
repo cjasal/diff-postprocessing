@@ -12,7 +12,7 @@ rule hd_bet:
     conda:
         "envs/hd_bet.yaml"
     shell:
-        "hd-bet -i {input}-o {output} -tta 0 -mode fast -device cpu"
+        "hd-bet -i {input} -o {output} -tta 0 -mode fast -device cpu"
 
 # TODO convert as a rule
 # singularity run -e \
@@ -23,11 +23,13 @@ rule hd_bet:
 
 rule convert_pre_denoise:
     input:
-        data="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.nii",
+        data="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.nii",  # derivatives/bids/sub_{subject}/ses_{session}
         bvecs="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bvec",
         bvals="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bval"
     output:
         "BIDS_Processing/Pre_{subject}/dwi_{subject}.mif"
+    container:
+        "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
         "mrconvert {input.data} -fslgrad {input.bvecs} {input.bvals} {output}"
 
@@ -36,7 +38,9 @@ rule denoise:
         dwi="BIDS_Processing/Pre_{subject}/dwi_{subject}.mif",
         noise="BIDS_Processing/Pre_{subject}/noise_{subject}.mif"
     output:
-        "BIDS_Processing/Pre_{subject}/dwi_denoise_{subject}.mif"
+        "BIDS_Processing/Pre_{subject}/dwi_denoise_{subject}.mif" # derivatives/dwi/sub_{subject}/ses_{session}
+    container:
+        "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
         "dwidenoise {input.dwi} {output} -noise {input.noise}"
 
