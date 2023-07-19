@@ -1,3 +1,4 @@
-datadir: "/nesi/nobackup/uoa03264/dti_pipeline_data/dicom"
-resultsdir: "/nesi/nobackup/uoa03264/dti_pipeline_data/processed"
+ethics_prefix: "test_ethics_"
+datadir: "/nesi/nobackup/uoa03264/dti_pipeline_data/dicom_max"
+resultsdir: "/nesi/nobackup/uoa03264/dti_pipeline_data/processed_max"
 fs_license: "fs_license.txt"
