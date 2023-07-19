@@ -14,20 +14,13 @@ rule hd_bet:
     shell:
         "hd-bet -i {input} -o {output} -tta 0 -mode fast -device cpu"
 
-# TODO convert as a rule
-# singularity run -e \
-# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/INPUTS/Pre_{subject}:/INPUTS \
-# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/OUTPUTS/Pre_{subject}:/OUTPUTS \
-# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/license.txt:/extra/freesurfer/license.txt \
-# /hpc/mtay316/B0_synth/synb0-disco_v3.0.sif
-
 rule convert_pre_denoise:
     input:
-        data="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.nii",  # derivatives/bids/sub_{subject}/ses_{session}
-        bvecs="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bvec",
-        bvals="BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bval"
+        data="bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.nii",
+        bvecs="bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.bvec",
+        bvals="bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.bval"
     output:
-        "BIDS_Processing/Pre_{subject}/dwi_{subject}.mif"
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -35,10 +28,10 @@ rule convert_pre_denoise:
 
 rule denoise:
     input:
-        dwi="BIDS_Processing/Pre_{subject}/dwi_{subject}.mif",
-        noise="BIDS_Processing/Pre_{subject}/noise_{subject}.mif"
+        dwi="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.mif",
+        noise="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_noise.mif"
     output:
-        "BIDS_Processing/Pre_{subject}/dwi_denoise_{subject}.mif" # derivatives/dwi/sub_{subject}/ses_{session}
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_denoise.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -46,9 +39,9 @@ rule denoise:
 
 rule convert_post_denoise:
     input:
-        "BIDS_Processing/Pre_{subject}/dwi_brain_mask_{subject}.nii.gz"
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_brain_mask.nii.gz"
     output:
-        "BIDS_Processing/Pre_{subject}/dwi_mask_{subject}.mif"
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_mask.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -57,11 +50,11 @@ rule convert_post_denoise:
 rule bias_correction:
     message: "Bias field correction"
     input:
-        data="BIDS_Processing/Pre_{subject}/dwi_denoise_{subject}.mif",
-        mask="BIDS_Processing/Pre_{subject}/dwi_mask_{subject}.mif",
-        bias="BIDS_Processing/Pre_{subject}/bias_{subject}.mif"
+        data="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_denoise.mif",
+        mask="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_mask.mif",
+        bias="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_bias.mif"
     output:
-        "BIDS_Processing/Pre_{subject}/dwidnbc_{subject}.mif"
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbc.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -70,9 +63,9 @@ rule bias_correction:
 rule ringing_correction:
     message: "Ringing artifact correction"
     input:
-        "BIDS_Processing/Pre_{subject}/dwidnbc_{subject}.mif"
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbc.mif"
     output:
-        "BIDS_Processing/Pre_{subject}/dwidnbcdegibbs_{subject}.mif"
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbcdegibbs.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -80,17 +73,24 @@ rule ringing_correction:
 
 rule convert_post_ringing:
     input:
-        "BIDS_Processing/Pre_{subject}/dwidnbcdegibbs_{subject}.mif"
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbcdegibbs.mif"
     output:
-        "BIDS_Processing/Pre_{subject}/dwidnbcdg_{subject}.nii.gz"
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbcdg.nii.gz"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
         "mrconvert {input} {output}"
 
+# TODO convert as a rule
+# singularity run -e \
+# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/INPUTS/Pre_{subject}:/INPUTS \
+# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/OUTPUTS/Pre_{subject}:/OUTPUTS \
+# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/license.txt:/extra/freesurfer/license.txt \
+# /hpc/mtay316/B0_synth/synb0-disco_v3.0.sif
+
 # NOTE: Remeber to put the index.txt and acqparams.txt files in the right folder
 
 # TODO convert as a rule
 # echo "Eddy current correction"
-# scp DWI_W_pre/Pre_{subject}/index.txt BIDS_Processing/Pre_{subject}
-#eddy_cuda9.1 --imain=BIDS_Processing/Pre_{subject}/dwidnbcdg_{subject}.nii.gz --mask=BIDS_Processing/Pre_{subject}/dwi_brain_mask_{subject} --index=BIDS_Processing/Pre_{subject}/index.txt --acqp=b0_synth/INPUTS/acqparams.txt --bvecs=BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bvec --bvals=BIDS/Pre_{subject}/dwi/Pre_{subject}_dwi.bval --fwhm=0 --topup=b0_synth/OUTPUTS/Pre_{subject}/topup --flm=quadratic --cnr_maps --out=BIDS_Processing/Pre_{subject}/eddy_unwarped_{subject} --repol --mporder=6 -v
+# scp DWI_W_pre/sub-{subject}_ses-{session}_Pre/index.txt BIDS_Processing/Pre_{subject}
+#eddy_cuda9.1 --imain=bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbcdg.nii.gz --mask=bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/dwi_brain_mask_{subject} --index=bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/index.txt --acqp=b0_synth/INPUTS/acqparams.txt --bvecs=bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.bvec --bvals=bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.bval --fwhm=0 --topup=b0_synth/OUTPUTS/Pre_{subject}/topup --flm=quadratic --cnr_maps --out=bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/eddy_unwarped_{subject} --repol --mporder=6 -v
