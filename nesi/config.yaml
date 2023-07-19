@@ -25,4 +25,6 @@ latency-wait: 20
 restart-times: 0
 printshellcmds: True
 use-singularity: True
-singularity-args: "--cleanenv"
+singularity-args: " --cleanenv"
+use-conda: True
+conda-frontend: "mamba"
