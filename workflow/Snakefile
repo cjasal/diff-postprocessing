@@ -29,7 +29,7 @@ rule all:
     input:
         expand(
             expand(
-                "{{resultsdir}}/tidy/sub_{subject}/ses_{session}",
+                "{{resultsdir}}/bids/sub-{subject}/ses-{session}",
                 zip,
                 subject=SUBJECTS,
                 session=SESSIONS,
