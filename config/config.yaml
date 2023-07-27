@@ -1,4 +1,4 @@
-ethics_prefix: "test_ethics_"
+ethics_prefix: "Conc_20Ntb14_"
 datadir: "/nesi/nobackup/uoa03264/dti_pipeline_data/dicom_max"
 resultsdir: "/nesi/nobackup/uoa03264/dti_pipeline_data/processed_max"
 fs_license: "fs_license.txt"
