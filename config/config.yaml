@@ -4,7 +4,7 @@ resultsdir: "/nesi/nobackup/uoa03264/dti_pipeline_data/processed_max"
 fs_license: "fs_license.txt"
 
 heudiconv:
-    heuristic: workflow/scripts/heuristic.py
+    heuristic: config/heuristic.py
     threads: 2
     mem_mb: 4000
     time_min: 60
