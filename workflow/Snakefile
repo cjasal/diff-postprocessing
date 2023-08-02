@@ -30,7 +30,7 @@ rule all:
     input:
         expand(
             expand(
-                "{{resultsdir}}/bids/sub-{subject}/ses-{session}",
+                "{{resultsdir}}/bids/derivatives/sub-{subject}_ses-{session}.done",
                 zip,
                 subject=SUBJECTS,
                 session=SESSIONS,
@@ -58,7 +58,7 @@ rule tidy_dicoms:
             target_folder.mkdir(parents=True, exist_ok=True)
             (target_folder / dicom_file.name).symlink_to(dicom_file)
 
-rule heudiconv:
+checkpoint heudiconv:
     input:
         "{resultsdir}/tidy/sub_{subject}/ses_{session}"
     output:
@@ -94,11 +94,11 @@ rule hd_bet:
 
 rule convert_pre_denoise:
     input:
-        data="bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.nii",
-        bvecs="bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.bvec",
-        bvals="bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.bval"
+        data="{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.nii.gz",
+        bvecs="{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.bvec",
+        bvals="{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.bval"
     output:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.mif"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -106,10 +106,10 @@ rule convert_pre_denoise:
 
 rule denoise:
     input:
-        dwi="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.mif",
-        noise="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_noise.mif"
+        dwi="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif",
+        noise="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_noise.mif"
     output:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_denoise.mif"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -117,9 +117,9 @@ rule denoise:
 
 rule convert_post_denoise:
     input:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_brain_mask.nii.gz"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     output:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_mask.mif"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -128,11 +128,11 @@ rule convert_post_denoise:
 rule bias_correction:
     message: "Bias field correction"
     input:
-        data="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_denoise.mif",
-        mask="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi_mask.mif",
-        bias="bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_bias.mif"
+        data="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif",
+        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif",
+        bias="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_bias.mif"
     output:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbc.mif"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -141,9 +141,9 @@ rule bias_correction:
 rule ringing_correction:
     message: "Ringing artifact correction"
     input:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbc.mif"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif"
     output:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbcdegibbs.mif"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdegibbs.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -151,23 +151,51 @@ rule ringing_correction:
 
 rule convert_post_ringing:
     input:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbcdegibbs.mif"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdegibbs.mif"
     output:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbcdg.nii.gz"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
         "mrconvert {input} {output}"
 
+# TODO double check that it supports nii.gz format
 rule fslroi:
     input:
-        "bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.nii"
+        "{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.nii.gz
     output:
-        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_nodif.nii"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     container:
         "TODO"
     shell:
         "fslroi {input} {output} 0 1"
+
+def get_derivatives_filenames(wildcards):
+    # create a dependency on heudiconv rule output
+    checkpoints.heudiconv.get(**wildcards)
+
+    bids_pattern = (
+        f"{wildcards.resultsdir}/bids/sub-{wildcards.subject}/ses-{wildcards.session}"
+        f"/anat/sub-{wildcards.subject}_ses-{wildcards.session}_"
+        "{entity}_T1w.nii.gz"
+    )
+    entities, = glob_wildcards(bids_pattern)
+
+    # TODO add all derivatives files to generate
+    filenames = expand(
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}"
+        "/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz",
+        entity=entities,
+        **wildcards
+    )
+
+    return filenames
+
+rule all_derivatives:
+    input:
+        get_derivatives_filenames
+    output:
+        touch("{resultsdir}/bids/derivatives/sub-{subject}_ses-{session}.done")
 
 # TODO convert as a rule
 # singularity run -e \
@@ -176,7 +204,7 @@ rule fslroi:
 # -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/license.txt:/extra/freesurfer/license.txt \
 # /hpc/mtay316/B0_synth/synb0-disco_v3.0.sif
 
-# NOTE: Remeber to put the index.txt and acqparams.txt files in the right folder
+# NOTE: Remember to put the index.txt and acqparams.txt files in the right folder
 
 # TODO convert as a rule
 # echo "Eddy current correction"
