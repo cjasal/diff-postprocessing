@@ -116,7 +116,28 @@ rule denoise:
     shell:
         "dwidenoise {input} {output.denoised} -noise {output.noise}"
 
-rule convert_post_denoise:
+# TODO double check that it supports nii.gz format
+rule fslroi:
+    input:
+        "{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.nii.gz"
+    output:
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
+    container:
+        "TODO"
+    shell:
+        "fslroi {input} {output} 0 1"
+
+rule bet:
+    input:
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
+    output:
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
+    container:
+        "TODO"
+    shell:
+        "TODO"
+
+rule convert_post_bet:
     input:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     output:
@@ -131,13 +152,13 @@ rule bias_correction:
     input:
         data="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif",
         mask="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif",
-        bias="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_bias.mif"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif"
+        debiased="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif",
+        bias="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_bias.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
-        "dwibiascorrect fsl {input.data} {output} -mask {input.mask} -bias {input.bias}"
+        "dwibiascorrect fsl {input.data} {output.debiased} -mask {input.mask} -bias {output.bias}"
 
 rule ringing_correction:
     message: "Ringing artifact correction"
@@ -159,17 +180,6 @@ rule convert_post_ringing:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
         "mrconvert {input} {output}"
-
-# TODO double check that it supports nii.gz format
-rule fslroi:
-    input:
-        "{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.nii.gz"
-    output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
-    container:
-        "TODO"
-    shell:
-        "fslroi {input} {output} 0 1"
 
 def get_derivatives_filenames(wildcards):
     # create a dependency on heudiconv rule output
