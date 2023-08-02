@@ -12,6 +12,7 @@ def list_scans(root_folder, prefix):
         infos = [s.lower() for s in path.stem.replace(prefix, "").split("_")]
         if len(infos) == 2:
             infos += ["a"]
+
         cohort, subject, session = infos
 
         if path.is_dir():
@@ -157,6 +158,16 @@ rule convert_post_ringing:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
         "mrconvert {input} {output}"
+
+rule fslroi:
+    input:
+        "bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.nii"
+    output:
+        "bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_nodif.nii"
+    container:
+        "TODO"
+    shell:
+        "fslroi {input} {output} 0 1"
 
 # TODO convert as a rule
 # singularity run -e \
