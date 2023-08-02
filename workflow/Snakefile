@@ -94,26 +94,27 @@ rule hd_bet:
 
 rule convert_pre_denoise:
     input:
-        data="{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.nii.gz",
-        bvecs="{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.bvec",
-        bvals="{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.bval"
+        "{resultsdir}/bids/sub-{subject}/ses-{session}"
     output:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
-        "mrconvert {input.data} -fslgrad {input.bvecs} {input.bvals} {output}"
+        "mrconvert {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.nii.gz "
+        "-fslgrad {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bvec "
+        "{input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bval "
+        "{output}"
 
 rule denoise:
     input:
-        dwi="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif",
-        noise="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_noise.mif"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif",
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif"
+        denoised="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif",
+        noise="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_noise.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
-        "dwidenoise {input.dwi} {output} -noise {input.noise}"
+        "dwidenoise {input} {output.denoised} -noise {output.noise}"
 
 rule convert_post_denoise:
     input:
@@ -162,7 +163,7 @@ rule convert_post_ringing:
 # TODO double check that it supports nii.gz format
 rule fslroi:
     input:
-        "{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.nii.gz
+        "{resultsdir}/bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.nii.gz"
     output:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     container:
