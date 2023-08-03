@@ -25,7 +25,6 @@ def list_scans(root_folder, prefix):
 MAPPING = list_scans(config["datadir"], config["ethics_prefix"])
 SUBJECTS, SESSIONS = zip(*MAPPING)
 
-# TODO add final output
 rule all:
     input:
         expand(
@@ -116,7 +115,6 @@ rule denoise:
     shell:
         "dwidenoise {input} {output.denoised} -noise {output.noise}"
 
-# TODO double check that it supports nii.gz format
 rule fslroi:
     input:
         "{resultsdir}/bids/sub-{subject}/ses-{session}"
@@ -127,7 +125,6 @@ rule fslroi:
     shell:
         "fslroi {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.nii.gz "
         "{output} 0 1"
-        #"export FS_LICENSE=$(realpath {params.license_path}) && "
 
 rule bet:
     input:
