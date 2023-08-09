@@ -123,6 +123,8 @@ rule fslroi:
     conda:
         "envs/fsl.yaml"
     shell:
+        "export FSLDIR=$(dirname $(which fslroi))/.. && "
+        ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
         "fslroi {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.nii.gz "
         "{output} 0 1"
 
