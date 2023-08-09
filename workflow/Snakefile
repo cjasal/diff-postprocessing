@@ -112,8 +112,13 @@ rule denoise:
         noise="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_noise.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
+    threads: config["denoise"]["threads"]
+    resources:
+        cpus=lambda wildcards, threads: threads,
+        mem_mb=config["denoise"]["mem_mb"],
+        time_min=config["denoise"]["time_min"]
     shell:
-        "dwidenoise {input} {output.denoised} -noise {output.noise}"
+        "dwidenoise -nthreads {threads} {input} {output.denoised} -noise {output.noise}"
 
 rule fslroi:
     input:
