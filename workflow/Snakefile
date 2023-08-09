@@ -136,6 +136,8 @@ rule bet:
     conda:
         "envs/fsl.yaml"
     shell:
+        "export FSLDIR=$(dirname $(which fslroi))/.. && "
+        ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
         "bet {input} {output}"
 
 rule convert_post_bet:
