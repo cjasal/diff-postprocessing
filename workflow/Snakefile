@@ -171,8 +171,13 @@ rule ringing_correction:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdegibbs.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
+    threads: config["ringing_correction"]["threads"]
+    resources:
+        cpus=lambda wildcards, threads: threads,
+        mem_mb=config["ringing_correction"]["mem_mb"],
+        time_min=config["ringing_correction"]["time_min"]
     shell:
-        "mrdegibbs {input} {output}"
+        "mrdegibbs -nthreads {threads} {input} {output}"
 
 rule convert_post_ringing:
     input:
