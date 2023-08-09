@@ -106,10 +106,10 @@ rule convert_pre_denoise:
 
 rule denoise:
     input:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif",
+        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi.mif",
     output:
-        denoised="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif",
-        noise="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_noise.mif"
+        denoised="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif",
+        noise="{derivatives}/sub-{subject}_ses-{session}_{entity}_noise.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     threads: config["denoise"]["threads"]
@@ -135,9 +135,9 @@ rule fslroi:
 
 rule bet:
     input:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
+        "{derivatives}/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
+        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     conda:
         "envs/fsl.yaml"
     shell:
@@ -147,9 +147,9 @@ rule bet:
 
 rule convert_post_bet:
     input:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
+        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif"
+        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -158,11 +158,11 @@ rule convert_post_bet:
 rule bias_correction:
     message: "Bias field correction"
     input:
-        data="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif",
-        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif",
+        data="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif",
+        mask="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif",
     output:
-        debiased="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif",
-        bias="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_bias.mif"
+        debiased="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif",
+        bias="{derivatives}/sub-{subject}_ses-{session}_{entity}_bias.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -171,9 +171,9 @@ rule bias_correction:
 rule ringing_correction:
     message: "Ringing artifact correction"
     input:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif"
+        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdegibbs.mif"
+        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbcdegibbs.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     threads: config["ringing_correction"]["threads"]
@@ -186,9 +186,9 @@ rule ringing_correction:
 
 rule convert_post_ringing:
     input:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdegibbs.mif"
+        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbcdegibbs.mif"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz"
+        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
