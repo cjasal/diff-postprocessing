@@ -3,7 +3,7 @@
 #SBATCH --time=02-00:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
-#SBATCH --mem=1GB
+#SBATCH --mem=4GB
 #SBATCH --output=logs/nesi/%j-%x.out
 #SBATCH --error=logs/nesi/%j-%x.out
 #SBATCH --dependency=singleton

@@ -83,13 +83,18 @@ checkpoint heudiconv:
 
 rule hd_bet:
     input:
-        "T1_W_post/{subject}/Post_{subject}.nii.gz"
+        "{resultsdir}/bids/sub-{subject}/ses-{session}"
     output:
-        "T1_W_post/T1_Brain/Post_{subject}_brain"
+        brain="{resultsdir}/bids/derivatives/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
+        mask="{resultsdir}/bids/derivatives/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain_mask.nii.gz"
     conda:
         "envs/hd_bet.yaml"
+    params:
+        output=lambda wildcards, output: Path(output["brain"]).stem
     shell:
-        "hd-bet -i {input} -o {output} -tta 0 -mode fast -device cpu"
+        "hd-bet -i {input}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_T1w.nii.gz "
+        "-o {params.output} "
+        "-tta 0 -mode fast -device cpu"
 
 rule convert_pre_denoise:
     input:
@@ -206,12 +211,14 @@ def get_derivatives_filenames(wildcards):
     entities, = glob_wildcards(bids_pattern)
 
     # TODO add all derivatives files to generate
-    filenames = expand(
+    filenames_pattern = [
         "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}"
         "/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz",
-        entity=entities,
-        **wildcards
-    )
+        "{resultsdir}/bids/derivatives/hd_bet/sub-{subject}/ses-{session}/"
+        "sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz"
+    ]
+
+    filenames = expand(filenames_pattern, entity=entities, **wildcards)
 
     return filenames
 
