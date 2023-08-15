@@ -91,6 +91,11 @@ rule hd_bet:
         "envs/hd_bet.yaml"
     params:
         output=lambda wildcards, output: Path(output["brain"]).stem
+    threads: config["hd_bet"]["threads"]
+    resources:
+        cpus=lambda wildcards, threads: threads,
+        mem_mb=config["hd_bet"]["mem_mb"],
+        time_min=config["hd_bet"]["time_min"]
     shell:
         "hd-bet -i {input}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_T1w.nii.gz "
         "-o {params.output} "
