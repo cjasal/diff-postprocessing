@@ -81,6 +81,11 @@ checkpoint heudiconv:
         "--bids "
         "--overwrite"
 
+def hd_bet_output(wildcards, output):
+    output_nifti = Path(output["brain"])
+    output_prefix = output_nifti.stem.split(".")[0]
+    return output_nifti.parent / output_prefix
+
 rule hd_bet:
     input:
         "{resultsdir}/bids/sub-{subject}/ses-{session}"
@@ -90,7 +95,7 @@ rule hd_bet:
     conda:
         "envs/hd_bet.yaml"
     params:
-        output=lambda wildcards, output: Path(output["brain"]).stem
+        output=hd_bet_output
     threads: config["hd_bet"]["threads"]
     resources:
         cpus=lambda wildcards, threads: threads,
