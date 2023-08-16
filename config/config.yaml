@@ -30,3 +30,6 @@ ringing_correction:
     threads: 2
     mem_mb: 2000
     time_min: 10
+
+eddy:
+    index: config/index.txt
