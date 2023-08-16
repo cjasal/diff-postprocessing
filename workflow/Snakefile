@@ -215,14 +215,19 @@ rule synb0_disco:
         bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
         b0="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     output:
-        "{resultsdir}/bids/derivatives/synb0_disco"
+        directory("{resultsdir}/bids/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}")
     container:
         "docker://leonyichencai/synb0-disco:v3.0"
+    threads: config["synb0_disco"]["threads"]
+    resources:
+        cpus=lambda wildcards, threads: threads,
+        mem_mb=config["synb0_disco"]["mem_mb"],
+        time_min=config["synb0_disco"]["time_min"]
     shell:
         "scripts/synb0_disco_pipeline.bash "
         "{input.bids}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_T1w.nii.gz "
         "{input.b0} "
-        "{params.acqparams} "
+        "{config[acqparams]} "
         "{output}"
 
 def get_derivatives_filenames(wildcards):
@@ -241,7 +246,8 @@ def get_derivatives_filenames(wildcards):
         "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}"
         "/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz",
         "{resultsdir}/bids/derivatives/hd_bet/sub-{subject}/ses-{session}/"
-        "sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz"
+        "sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
+        "{resultsdir}/bids/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}"
     ]
 
     filenames = expand(filenames_pattern, entity=entities, **wildcards)
