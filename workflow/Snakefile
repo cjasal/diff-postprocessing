@@ -236,14 +236,14 @@ rule eddy:
     message: "Eddy current correction"
     input:
         bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
-        dwidnbcdg="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbcdg.nii.gz",
-        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
+        dwidnbcdg="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz",
+        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
         synb0_disco="{resultsdir}/bids/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}"
     output:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddyunwarped.nii.gz"
     params:
         output=lambda wildcards, output: strip_extensions(output[0])
-    rule:
+    shell:
         "eddy_cuda9.1 "
         "--imain={input.dwidnbcdg} "
         "--mask={input.mask} "
