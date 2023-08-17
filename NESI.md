@@ -27,7 +27,7 @@ cd /nesi/project/PROJECTID/$USER/diff-processing
 and edit the `config.yml` file to set your input dataset and result folder paths, for example using `nano` editor:
 
 ```
-nano config.yml
+nano config/config.yaml
 ```
 
 or the JupyterLab editor if you logged in via Jupyter.
