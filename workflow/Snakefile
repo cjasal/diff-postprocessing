@@ -210,7 +210,6 @@ rule convert_post_ringing:
     shell:
         "mrconvert {input} {output}"
 
-# TODO add flags? https://github.com/MASILab/Synb0-DISCO#flags
 rule synb0_disco:
     input:
         bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
@@ -226,7 +225,7 @@ rule synb0_disco:
         time_min=config["synb0_disco"]["time_min"]
     shell:
         "export FS_LICENSE=$(realpath {config[fs_license]}) && "
-        "scripts/synb0_disco_pipeline.bash "
+        "workflow/scripts/synb0_disco_pipeline.bash "
         "{input.bids}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_T1w.nii.gz "
         "{input.b0} "
         "{config[acqparams]} "
