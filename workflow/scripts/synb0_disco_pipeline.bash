@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# ensure script fails if any command fails
+set -e
+
 # fetch input/output path from command line parameters
 if [[ $# -lt 4 ]]; then
     echo "Expected 4 arguments"
@@ -47,7 +50,7 @@ export PATH=$PATH:$ANTSPATH:/extra/ANTS/ANTs/Scripts
 source /extra/pytorch/bin/activate
 
 # Prepare input
-/extra/prepare_input.sh "${INPUTS_B0}" "${INPUTS_NIFTI}" $MNI_T1_1_MM_FILE /extra/atlases/mni_icbm152_t1_tal_nlin_asym_09c_2_5.nii.gz "${OUTPUTS}"
+bash -e /extra/prepare_input.sh "${INPUTS_B0}" "${INPUTS_NIFTI}" $MNI_T1_1_MM_FILE /extra/atlases/mni_icbm152_t1_tal_nlin_asym_09c_2_5.nii.gz "${OUTPUTS}"
 
 # Run inference
 NUM_FOLDS=5
