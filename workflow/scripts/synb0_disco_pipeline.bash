@@ -6,13 +6,13 @@ set -e
 # fetch input/output path from command line parameters
 if [[ $# -lt 4 ]]; then
     echo "Expected 4 arguments"
-    echo "Usage: ./synb0_disco_pipeline.bash FS_LICENSE INPUTS_NIFTI INPUTS_BO INPUTS_ACQPARAMS OUTPUTS [--notopup] [--stripped]"
+    echo "Usage: ./synb0_disco_pipeline.bash FS_LICENSE INPUTS_NIFTI INPUTS_B0 INPUTS_ACQPARAMS OUTPUTS [--notopup] [--stripped]"
     exit 1
 fi
 
 FS_LICENSE="$1"; shift
 INPUTS_NIFTI="$1"; shift
-INPUTS_BO="$1"; shift
+INPUTS_B0="$1"; shift
 INPUTS_ACQPARAMS="$1"; shift
 OUTPUTS="$1"; shift
 
