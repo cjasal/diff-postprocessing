@@ -13,8 +13,8 @@ heudiconv:
 
 synb0_disco:
     threads: 2
-    mem_mb: 10000
-    time_min: 120
+    mem_mb: 50000
+    time_min: 300
 
 hd_bet:
     threads: 1
