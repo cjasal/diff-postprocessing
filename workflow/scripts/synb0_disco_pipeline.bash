@@ -6,10 +6,11 @@ set -e
 # fetch input/output path from command line parameters
 if [[ $# -lt 4 ]]; then
     echo "Expected 4 arguments"
-    echo "Usage: ./synb0_disco_pipeline.bash INPUTS_NIFTI INPUTS_BO INPUTS_ACQPARAMS OUTPUTS [--notopup] [--stripped]"
+    echo "Usage: ./synb0_disco_pipeline.bash FS_LICENSE INPUTS_NIFTI INPUTS_BO INPUTS_ACQPARAMS OUTPUTS [--notopup] [--stripped]"
     exit 1
 fi
 
+FS_LICENSE="$1"; shift
 INPUTS_NIFTI="$1"; shift
 INPUTS_BO="$1"; shift
 INPUTS_ACQPARAMS="$1"; shift
@@ -30,11 +31,18 @@ do
     esac
 done
 
+# Copy/link freesurfer in a temporary folder, in order to replace the license file
+export FREESURFER_HOME="$(mktemp -d -t freesurfer-XXXXX)"
+trap 'rm -rf -- "$FREESURFER_HOME"' EXIT
+echo "Setting FREESURFER_HOME=$FREESURFER_HOME"
+
+ln -s /extra/freesurfer/* "${FREESURFER_HOME}"
+cp -f "${FS_LICENSE}" "${FREESURFER_HOME}/license.txt"
+
 # Set path for executable
 export PATH=$PATH:/extra
 
 # Set up freesurfer
-export FREESURFER_HOME=/extra/freesurfer
 source $FREESURFER_HOME/SetUpFreeSurfer.sh
 
 # Set up FSL
