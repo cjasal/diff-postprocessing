@@ -119,6 +119,15 @@ scancel --signal INT --full JOBID
 
 *Note: The options `--signal INT` and `--full` are very important to ensure all jobs related to this workflow are properly cancelled, not only the main Snakemake job.*
 
+Additionally, you can instruct Slurm to send you an email when the Slurm job changes states (start, end, failure...).
+Add the options `--mail-user` and `--mail-type` when submitting the job with `sbatch`:
+
+```
+sbatch --account=PROJECTID --mail-user=MYEMAIL --mail-type=ALL profiles/nesi/snakemake.sl
+```
+
+where `MYEMAIL` should be replaced by your actual email address.
+
 
 ## Workflow monitoring
 
@@ -182,18 +191,16 @@ Copy and paste it (including the long token string) in your web-browser of choic
 ## Miscellaneous notes
 
 
-TODO add any issue related to Mamba on NeSI
+### Changes in `~/.condarc` file
+
+The script `profiles/nesi/snakemake.sl` changes your `~/.condarc` in the following way:
+
+- it ensures that the conda cache folder is on `nobackup` storage to avoid filling up home space,
+- it sets the channel priority to `strict`, otherwise the environment will not be build.
 
 
-### Getting an email at the end of the workflow
+### Conda/Mamba issues on NeSI
 
-You can instruct Slurm to send you an email when a Slurm job changes states (start, ends, fails...).
-
-To get emails when the workflow start/ends, modify the script [`profiles/nesi/snakemake.sl`](profiles/nesi/snakemake.sl), adding the following in the header section:
-
-```
-#SBATCH --mail-user=my_email@domain.tld
-#SBATCH --mail-type=ALL
-```
-
-where `my_email@domain.tld` stands for your email address.
+If you encounter any issue with conda or mamba on NeSI, first make sure you **did not** run `conda init` or `mamba init`.
+These commands add a snippet in your `~/.bashrc` file which can conflicts with the environment modules system.
+You can use `nano ~/.bashrc` (or another command line editor of your choice) from a terminal on NeSI to remove it.
