@@ -15,8 +15,21 @@ set -euo pipefail
 module purge
 module load Mamba/23.1.0-1 Apptainer/1.1.9 snakemake/7.26.0-gimkl-2022a-Python-3.11.3
 
+# ensure user's local Python packages are not overriding Python module packages
+export PYTHONNOUSERSITE=1
+
 # parent folder for cache directories
 NOBACKUPDIR="/nesi/nobackup/$SLURM_JOB_ACCOUNT/$USER"
+
+# configure conda cache directory
+conda config --add pkgs_dirs "$NOBACKUPDIR/conda_pkgs"
+
+# ensure conda channel priority is strict (otherwise environment may no be built)
+conda config --set channel_priority strict
+
+# deactivate any conda environment already activate (e.g. base environment)
+source $(conda info --quiet --base)/etc/profile.d/conda.sh
+conda deactivate
 
 # configure apptainer build and cache directories
 export APPTAINER_CACHEDIR="$NOBACKUPDIR/apptainer_cachedir"
