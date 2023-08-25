@@ -227,6 +227,20 @@ rule synb0_disco:
         "{config[acqparams]} "
         "{output}"
 
+def choose_eddy(wildcards):
+    """select which version of the eddy executable to use, with or without GPU"""
+    gpu_config = str(config["eddy"]["gpu"]).strip()
+
+    if len(gpu_config) == 0:
+        has_gpu = False
+    else:
+        try:
+            has_gpu = int(gpu_config) > 0
+        except ValueError:
+            has_gpu = True
+
+    return "eddy_cuda9.1" if has_gpu else "eddy_openmp"
+
 rule eddy:
     message: "Eddy current correction"
     input:
@@ -237,9 +251,21 @@ rule eddy:
     output:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddyunwarped.nii.gz"
     params:
-        output=lambda wildcards, output: strip_extensions(output[0])
+        output=lambda wildcards, output: strip_extensions(output[0]),
+        eddy_executable=choose_eddy
+    container:
+        "docker://mrtrix3/mrtrix3:3.0.4"
+    threads: config["eddy"]["threads"]
+    resources:
+        cpus=lambda wildcards, threads: threads,
+        mem_mb=config["eddy"]["mem_mb"],
+        time_min=config["eddy"]["time_min"],
+        gpu=config["eddy"]["gpu"],
+        slurm_extra=config["eddy"].get("slurm_extra", "")
+    # environment:
+    #     TODO add CUDA 9.1
     shell:
-        "eddy_cuda9.1 "
+        "{params.eddy_executable} "
         "--imain={input.dwidnbcdg} "
         "--mask={input.mask} "
         "--bvecs={input.bids}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bvec "
