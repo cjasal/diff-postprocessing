@@ -239,7 +239,7 @@ def choose_eddy(wildcards):
         except ValueError:
             has_gpu = True
 
-    return "eddy_cuda10.2" if has_gpu else "eddy_openmp"
+    return "eddy_cuda10.2" if has_gpu else "eddy_cpu"
 
 rule eddy:
     message: "Eddy current correction"
@@ -254,7 +254,7 @@ rule eddy:
         output=lambda wildcards, output: strip_extensions(output[0]),
         eddy_executable=choose_eddy
     conda:
-        "envs/eddy_cuda.yaml"
+        "envs/eddy.yaml"
     threads: config["eddy"]["threads"]
     resources:
         cpus=lambda wildcards, threads: threads,
