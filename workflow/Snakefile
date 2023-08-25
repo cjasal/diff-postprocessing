@@ -239,7 +239,7 @@ def choose_eddy(wildcards):
         except ValueError:
             has_gpu = True
 
-    return "eddy_cuda9.1" if has_gpu else "eddy_openmp"
+    return "eddy_cuda10.2" if has_gpu else "eddy_openmp"
 
 rule eddy:
     message: "Eddy current correction"
@@ -253,8 +253,8 @@ rule eddy:
     params:
         output=lambda wildcards, output: strip_extensions(output[0]),
         eddy_executable=choose_eddy
-    container:
-        "docker://mrtrix3/mrtrix3:3.0.4"
+    conda:
+        "envs/eddy_cuda.yaml"
     threads: config["eddy"]["threads"]
     resources:
         cpus=lambda wildcards, threads: threads,
@@ -262,8 +262,8 @@ rule eddy:
         time_min=config["eddy"]["time_min"],
         gpu=config["eddy"]["gpu"],
         slurm_extra=config["eddy"].get("slurm_extra", "")
-    # environment:
-    #     TODO add CUDA 9.1
+    #envmodules:
+    #    "CUDA/10.2.89"
     shell:
         "{params.eddy_executable} "
         "--imain={input.dwidnbcdg} "

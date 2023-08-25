@@ -36,7 +36,7 @@ eddy:
     threads: 20
     mem_mb: 4000
     time_min: 30
-    gpu: 0
-    slurm_extra: "--partition milan"
-    #gpu: "P100:1"
-    #slurm_extra: "--partition gpu"
+    #gpu: 0
+    #slurm_extra: "--partition milan"
+    gpu: "P100:1"
+    slurm_extra: "--partition gpu"

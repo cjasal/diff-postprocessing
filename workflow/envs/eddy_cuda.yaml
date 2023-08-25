@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/public
+dependencies:
+  - fsl-eddy-cuda-10.2
+  - cudatoolkit=10.2
