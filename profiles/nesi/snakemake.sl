@@ -24,5 +24,9 @@ export APPTAINER_TMPDIR="$NOBACKUPDIR/apptainer_tmpdir"
 mkdir -p "$APPTAINER_CACHEDIR" "$APPTAINER_TMPDIR"
 setfacl -b "$APPTAINER_TMPDIR"  # avoid apptainer issues due to ACLs set on this folder
 
+# export singularity variables to ensure CUDA libraries are found by eddy_cuda9.1
+module load CUDA/9.1.85
+export APPTAINERENV_LD_LIBRARY_PATH="${CUDA_ROOT}/lib:\$LD_LIBRARY_PATH"
+
 # run snakemake using the NeSI profile
 snakemake --profile profiles/nesi --config account="$SLURM_JOB_ACCOUNT" $@
