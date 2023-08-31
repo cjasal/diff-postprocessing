@@ -157,7 +157,7 @@ rule bet:
     shell:
         "bet {input} {output}"
 
-rule convert_post_bet:
+rule convert_pre_bias:
     input:
         "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     output:
