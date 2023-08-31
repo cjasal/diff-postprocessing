@@ -194,7 +194,8 @@ rule ringing_correction:
         mem_mb=config["ringing_correction"]["mem_mb"],
         time_min=config["ringing_correction"]["time_min"]
     shell:
-        "mrdegibbs -nthreads {threads} {input} {output}"
+        #"mrdegibbs -nthreads {threads} {input} {output}"
+        "cp {input} {output}"
 
 rule convert_post_ringing:
     input:
