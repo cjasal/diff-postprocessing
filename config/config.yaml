@@ -33,8 +33,9 @@ ringing_correction:
 
 eddy:
     index: config/index.txt
+    executable: "eddy_cuda10.2"  # support eddy_cuda10.2 or eddy_cpu
     threads: 2
     mem_mb: 4000
-    time_min: 30
+    time_min: 60
     gpu: "P100:1"
     slurm_extra: "--partition gpu"
