@@ -249,6 +249,8 @@ rule eddy:
         gpu=config["eddy"]["gpu"],
         slurm_extra=config["eddy"].get("slurm_extra", "")
     shell:
+        "export FSLDIR=$(dirname $(which eddy_cpu))/.. && "
+        ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
         "{config[eddy][executable]} "
         "--imain={input.dwidnbcdg} "
         "--mask={input.mask} "
