@@ -1,13 +1,20 @@
 ethics_prefix: "Conc_20Ntb14_"
 datadir: "/nesi/nobackup/uoa03264/dti_pipeline_data/dicom_max"
 resultsdir: "/nesi/nobackup/uoa03264/dti_pipeline_data/processed_max"
-fs_license: "fs_license.txt"
+
+acqparams: "config/acqparams.txt"
+fs_license: "config/fs_license.txt"
 
 heudiconv:
     heuristic: config/heuristic.py
     threads: 2
     mem_mb: 4000
     time_min: 60
+
+synb0_disco:
+    threads: 2
+    mem_mb: 50000
+    time_min: 300
 
 hd_bet:
     threads: 1
@@ -23,3 +30,12 @@ ringing_correction:
     threads: 2
     mem_mb: 2000
     time_min: 10
+
+eddy:
+    index: config/index.txt
+    executable: "eddy_cuda10.2"  # support eddy_cuda10.2 or eddy_cpu
+    threads: 2
+    mem_mb: 4000
+    time_min: 60
+    gpu: "P100:1"
+    slurm_extra: "--partition gpu"

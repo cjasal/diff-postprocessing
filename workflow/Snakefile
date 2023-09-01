@@ -29,7 +29,7 @@ rule all:
     input:
         expand(
             expand(
-                "{{resultsdir}}/bids/derivatives/sub-{subject}_ses-{session}.done",
+                "{{resultsdir}}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}",
                 zip,
                 subject=SUBJECTS,
                 session=SESSIONS,
@@ -81,21 +81,22 @@ checkpoint heudiconv:
         "--bids "
         "--overwrite"
 
-def hd_bet_output(wildcards, output):
-    output_nifti = Path(output["brain"])
-    output_prefix = output_nifti.stem.split(".")[0]
-    return output_nifti.parent / output_prefix
+def strip_extensions(filename):
+    """helper function to remove all extensions from a file path"""
+    filepath = Path(filename)
+    prefix = filepath.stem.split(".")[0]
+    return filepath.parent / prefix
 
 rule hd_bet:
     input:
         "{resultsdir}/bids/sub-{subject}/ses-{session}"
     output:
-        brain="{resultsdir}/bids/derivatives/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
-        mask="{resultsdir}/bids/derivatives/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain_mask.nii.gz"
+        brain="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
+        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain_mask.nii.gz"
     conda:
         "envs/hd_bet.yaml"
     params:
-        output=hd_bet_output
+        output=lambda wildcards, output: strip_extensions(output["brain"])
     threads: config["hd_bet"]["threads"]
     resources:
         cpus=lambda wildcards, threads: threads,
@@ -110,7 +111,7 @@ rule convert_pre_denoise:
     input:
         "{resultsdir}/bids/sub-{subject}/ses-{session}"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
@@ -139,12 +140,10 @@ rule fslroi:
     input:
         "{resultsdir}/bids/sub-{subject}/ses-{session}"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
-    conda:
-        "envs/fsl.yaml"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
+    container:
+        "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
-        "export FSLDIR=$(dirname $(which fslroi))/.. && "
-        ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
         "fslroi {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.nii.gz "
         "{output} 0 1"
 
@@ -153,14 +152,12 @@ rule bet:
         "{derivatives}/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     output:
         "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
-    conda:
-        "envs/fsl.yaml"
+    container:
+        "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
-        "export FSLDIR=$(dirname $(which bet))/.. && "
-        ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
         "bet {input} {output}"
 
-rule convert_post_bet:
+rule convert_pre_bias:
     input:
         "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     output:
@@ -197,7 +194,8 @@ rule ringing_correction:
         mem_mb=config["ringing_correction"]["mem_mb"],
         time_min=config["ringing_correction"]["time_min"]
     shell:
-        "mrdegibbs -nthreads {threads} {input} {output}"
+        # TODO not working "mrdegibbs -nthreads {threads} {input} {output}"
+        "cp {input} {output}"
 
 rule convert_post_ringing:
     input:
@@ -208,6 +206,67 @@ rule convert_post_ringing:
         "docker://mrtrix3/mrtrix3:3.0.4"
     shell:
         "mrconvert {input} {output}"
+
+rule synb0_disco:
+    input:
+        bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
+        b0="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
+    output:
+        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}")
+    container:
+        "docker://leonyichencai/synb0-disco:v3.0"
+    threads: config["synb0_disco"]["threads"]
+    resources:
+        cpus=lambda wildcards, threads: threads,
+        mem_mb=config["synb0_disco"]["mem_mb"],
+        time_min=config["synb0_disco"]["time_min"]
+    shell:
+        "workflow/scripts/synb0_disco_pipeline.bash "
+        "{config[fs_license]} "
+        "{input.bids}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_T1w.nii.gz "
+        "{input.b0} "
+        "{config[acqparams]} "
+        "{output}"
+
+rule eddy:
+    message: "Eddy current correction"
+    input:
+        bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
+        dwidnbcdg="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz",
+        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
+        synb0_disco="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}"
+    output:
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.eddy_rotated_bvecs"
+    params:
+        output=lambda wildcards, output: strip_extensions(output[0])
+    conda:
+        "envs/eddy.yaml"
+    threads: config["eddy"]["threads"]
+    resources:
+        cpus=lambda wildcards, threads: threads,
+        mem_mb=config["eddy"]["mem_mb"],
+        time_min=config["eddy"]["time_min"],
+        gpu=config["eddy"]["gpu"],
+        slurm_extra=config["eddy"].get("slurm_extra", "")
+    shell:
+        "export FSLDIR=$(dirname $(which eddy_cpu))/.. && "
+        ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
+        "{config[eddy][executable]} "
+        "--imain={input.dwidnbcdg} "
+        "--mask={input.mask} "
+        "--bvecs={input.bids}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bvec "
+        "--bvals={input.bids}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bval "
+        "--topup={input.synb0_disco}/topup "
+        "--index={config[eddy][index]} "
+        "--acqp={config[acqparams]} "
+        "--out={params.output} "
+        "--fwhm=0 "
+        "--flm=quadratic "
+        "--cnr_maps "
+        "--repol "
+        "--mporder=6 "
+        "-v"
 
 def get_derivatives_filenames(wildcards):
     # create a dependency on heudiconv rule output
@@ -220,34 +279,25 @@ def get_derivatives_filenames(wildcards):
     )
     entities, = glob_wildcards(bids_pattern)
 
-    # TODO add all derivatives files to generate
+    basedir = "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives"
     filenames_pattern = [
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}"
-        "/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz",
-        "{resultsdir}/bids/derivatives/hd_bet/sub-{subject}/ses-{session}/"
-        "sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz"
+        "/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
+        "/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
+        "/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
+        "/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.eddy_rotated_bvecs"
     ]
+    filenames_pattern = [basedir + pattern for pattern in filenames_pattern]
 
     filenames = expand(filenames_pattern, entity=entities, **wildcards)
 
     return filenames
 
-rule all_derivatives:
+rule dwi_preprocessing:
+    localrule: True
     input:
         get_derivatives_filenames
     output:
-        touch("{resultsdir}/bids/derivatives/sub-{subject}_ses-{session}.done")
-
-# TODO convert as a rule
-# singularity run -e \
-# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/INPUTS/Pre_{subject}:/INPUTS \
-# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/OUTPUTS/Pre_{subject}:/OUTPUTS \
-# -B /eresearch/resmed/mtay316/DTI/Concussion_Phase2/Preseason/Processing/b0_synth/license.txt:/extra/freesurfer/license.txt \
-# /hpc/mtay316/B0_synth/synb0-disco_v3.0.sif
-
-# NOTE: Remember to put the index.txt and acqparams.txt files in the right folder
-
-# TODO convert as a rule
-# echo "Eddy current correction"
-# scp DWI_W_pre/sub-{subject}_ses-{session}_Pre/index.txt BIDS_Processing/Pre_{subject}
-#eddy_cuda9.1 --imain=bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwidnbcdg.nii.gz --mask=bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/dwi_brain_mask_{subject} --index=bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/index.txt --acqp=b0_synth/INPUTS/acqparams.txt --bvecs=bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.bvec --bvals=bids/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_dwi.bval --fwhm=0 --topup=b0_synth/OUTPUTS/Pre_{subject}/topup --flm=quadratic --cnr_maps --out=bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/eddy_unwarped_{subject} --repol --mporder=6 -v
+        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}")
+    shell:
+        # TODO copy or move instead of linking?
+        "mkdir -p {output} && ln -s {input} {output}"

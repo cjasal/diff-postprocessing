@@ -2,5 +2,6 @@ channels:
   - conda-forge
   - https://fsl.fmrib.ox.ac.uk/fsldownloads/fslconda/public
 dependencies:
-  - fsl-bet2
-  - fsl-avwutils
+  - fsl-eddy
+  - fsl-eddy-cuda-10.2
+  - cudatoolkit=10.2
