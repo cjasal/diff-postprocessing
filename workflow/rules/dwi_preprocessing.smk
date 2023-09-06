@@ -185,7 +185,7 @@ rule eddy:
         "--bvecs={input.bids}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bvec "
         "--bvals={input.bids}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bval "
         "--topup={input.synb0_disco}/topup "
-        "--index={config[eddy][index]} "
+        "--index={config[index]} "
         "--acqp={config[acqparams]} "
         "--out={params.output} "
         "--verbose "

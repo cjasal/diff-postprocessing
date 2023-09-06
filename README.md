@@ -25,13 +25,14 @@ Then edit the configuration file `config/config.yml`, setting the following entr
 - the ethics prefix `ethics_prefix` for your input files,
 - the input data folder `datadir`,
 - the results folder `resultsdir`,
-- the path to your `heudiconv` heuristic script (`heuristic` entry under `heudiconv` section),
-- the path to your Freesurfer license (`license_path` entry under `freesurfer` section)
+- the path to your Freesurfer license `fs_license`,
+- the path to the aquisition parameter file `aqcparams` and the index file `index` (see [--acqp](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#A--acqp) and [--index](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/eddy/UsersGuide#A--index) sections in eddy user guide).
+- the path to your `heudiconv` heuristic script (`heuristic` entry under `heudiconv` section).
 
 You may want to edit other entries, in particular:
 
 - for each software, compute resources (time, memory and threads) can be adjusted,
-- the first level analysis parameters.
+- for some software, additional command line arguments.
 
 Once this configuration is finished, you can run `snakemake` to start the workflow.
 

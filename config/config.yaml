@@ -3,6 +3,7 @@ datadir: "/nesi/nobackup/uoa03264/dti_pipeline_data/dicom_mary"
 resultsdir: "/nesi/nobackup/uoa03264/dti_pipeline_data/processed_mary"
 
 acqparams: "config/acqparams.txt"
+index: "config/index.txt"
 fs_license: "config/fs_license.txt"
 
 heudiconv:
@@ -33,7 +34,6 @@ ringing_correction:
     time_min: 10
 
 eddy:
-    index: config/index.txt
     executable: "eddy_cuda10.2"  # support eddy_cuda10.2 or eddy_cpu
     extra_args: "--fwhm=0 --flm=quadratic --cnr_maps --repol --mporder=6"
     threads: 2
