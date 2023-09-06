@@ -24,7 +24,7 @@ rule hd_bet:
     shell:
         "hd-bet -i {input}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_T1w.nii.gz "
         "-o {params.output} "
-        "-tta 0 -mode fast -device cpu"
+        "{config[hd_bet][extra_args]}"
 
 rule convert_pre_denoise:
     input:
@@ -188,9 +188,5 @@ rule eddy:
         "--index={config[eddy][index]} "
         "--acqp={config[acqparams]} "
         "--out={params.output} "
-        "--fwhm=0 "
-        "--flm=quadratic "
-        "--cnr_maps "
-        "--repol "
-        "--mporder=6 "
-        "-v"
+        "--verbose "
+        "{config[eddy][extra_args]}"

@@ -5,7 +5,6 @@ resultsdir: "/nesi/nobackup/uoa03264/dti_pipeline_data/processed_mary"
 acqparams: "config/acqparams.txt"
 fs_license: "config/fs_license.txt"
 
-
 heudiconv:
     heuristic: config/heuristic.py
     threads: 2
@@ -18,6 +17,7 @@ synb0_disco:
     time_min: 300
 
 hd_bet:
+    extra_args: "-tta 0 -mode fast -device cpu"
     threads: 1
     mem_mb: 4000
     time_min: 20
@@ -35,6 +35,7 @@ ringing_correction:
 eddy:
     index: config/index.txt
     executable: "eddy_cuda10.2"  # support eddy_cuda10.2 or eddy_cpu
+    extra_args: "--fwhm=0 --flm=quadratic --cnr_maps --repol --mporder=6"
     threads: 2
     mem_mb: 4000
     time_min: 60
