@@ -33,6 +33,7 @@ rule convert_pre_denoise:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
+    group: "dwi_misc"
     shell:
         "mrconvert {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.nii.gz "
         "-fslgrad {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bvec "
@@ -52,6 +53,7 @@ rule denoise:
         cpus=lambda wildcards, threads: threads,
         mem_mb=config["denoise"]["mem_mb"],
         time_min=config["denoise"]["time_min"]
+    group: "dwi_misc"
     shell:
         "dwidenoise -nthreads {threads} {input} {output.denoised} -noise {output.noise}"
 
@@ -62,6 +64,7 @@ rule fslroi:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
+    group: "dwi_misc"
     shell:
         "fslroi {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.nii.gz "
         "{output} 0 1"
@@ -73,6 +76,7 @@ rule bet:
         "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
+    group: "dwi_misc"
     shell:
         "bet {input} {output}"
 
@@ -83,6 +87,7 @@ rule convert_pre_bias:
         "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
+    group: "dwi_misc"
     shell:
         "mrconvert {input} {output}"
 
@@ -96,6 +101,7 @@ rule bias_correction:
         bias="{derivatives}/sub-{subject}_ses-{session}_{entity}_bias.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
+    group: "dwi_misc"
     shell:
         "dwibiascorrect fsl {input.data} {output.debiased} -mask {input.mask} -bias {output.bias}"
 
@@ -112,6 +118,7 @@ rule ringing_correction:
         cpus=lambda wildcards, threads: threads,
         mem_mb=config["ringing_correction"]["mem_mb"],
         time_min=config["ringing_correction"]["time_min"]
+    group: "dwi_misc"
     shell:
         # TODO not working "mrdegibbs -nthreads {threads} {input} {output}"
         "cp {input} {output}"
@@ -123,6 +130,7 @@ rule convert_post_ringing:
         "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
+    group: "dwi_misc"
     shell:
         "mrconvert {input} {output}"
 
