@@ -91,8 +91,8 @@ rule hd_bet:
     input:
         "{resultsdir}/bids/sub-{subject}/ses-{session}"
     output:
-        brain="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
-        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain_mask.nii.gz"
+        brain="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/hd_bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
+        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/hd_bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_{entity}_T1w_brain_mask.nii.gz"
     conda:
         "envs/hd_bet.yaml"
     params:
@@ -210,7 +210,7 @@ rule convert_post_ringing:
 rule synb0_disco:
     input:
         bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
-        b0="{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
+        b0="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     output:
         directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}")
     container:
@@ -236,8 +236,8 @@ rule eddy:
         mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
         synb0_disco="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.eddy_rotated_bvecs"
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.eddy_rotated_bvecs"
     params:
         output=lambda wildcards, output: strip_extensions(output[0])
     conda:
@@ -282,7 +282,7 @@ def get_derivatives_filenames(wildcards):
     basedir = "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives"
     filenames_pattern = [
         "/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
-        "/hd_bet/sub-{subject}/ses-{session}/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
+        "/hd_bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
         "/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
         "/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.eddy_rotated_bvecs"
     ]
