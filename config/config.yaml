@@ -35,7 +35,7 @@ ringing_correction:
 
 eddy:
     executable: "eddy_cuda10.2"  # support eddy_cuda10.2 or eddy_cpu
-    extra_args: "--fwhm=0 --flm=quadratic --cnr_maps --repol --mporder=6"
+    extra_args: "--fwhm=0 --flm=quadratic --cnr_maps --repol --mporder=6 --residuals"
     threads: 2
     mem_mb: 4000
     time_min: 60

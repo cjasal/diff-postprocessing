@@ -190,3 +190,28 @@ rule eddy:
         "--out={params.output} "
         "--verbose "
         "{config[eddy][extra_args]}"
+
+# eddy_quad <eddy_output_basename> -idx <index_file> -par <acqparams_file> -m <dwi_brain_mask> -b <bvals>
+
+rule eddy_quad:
+    message: "Eddy Quality Control"
+    input:
+        bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
+        eddy="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
+        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
+    output:
+        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.qc")
+    params:
+        output=lambda wildcards, output: strip_extensions(output[0])
+    conda:
+        "../envs/eddy.yaml"
+    shell:
+        "export FSLDIR=$(dirname $(which eddy_cpu))/.. && "
+        ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
+        "eddy_quad "
+        "{params.output} "
+        "-m {input.mask} "
+        "-b {input.bids}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bval "
+        "-idx {config[index]} "
+        "-par {config[acqparams]} "
+
