@@ -26,6 +26,7 @@ Then edit the configuration file `config/config.yml`, setting the following entr
 - the input data folder `datadir`,
 - the results folder `resultsdir`,
 - the path to your `heudiconv` heuristic script (`heuristic` entry under `heudiconv` section),
+- the path to your Freesurfer license (`license_path` entry under `freesurfer` section)
 
 You may want to edit other entries, in particular:
 
