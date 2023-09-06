@@ -2,30 +2,14 @@ from pathlib import Path
 
 configfile: "config/config.yaml"
 
-def list_scans(root_folder, prefix):
-    mapping = {}
-
-    for path in Path(root_folder).iterdir():
-        if not path.is_dir() and not path.suffix == ".zip":
-            continue
-
-        infos = [s.lower() for s in path.stem.replace(prefix, "").split("_")]
-        if len(infos) == 2:
-            infos += ["a"]
-
-        cohort, subject, session = infos
-
-        if path.is_dir():
-            mapping[(cohort + subject, session)] = path
-        else:
-            mapping[(cohort + subject, session)] = path.with_suffix("")
-
-    return mapping
+include: "rules/list_scans.smk"
 
 MAPPING = list_scans(config["datadir"], config["ethics_prefix"])
 SUBJECTS, SESSIONS = zip(*MAPPING)
 
 rule all:
+    localrule: True
+    default_target: True
     input:
         expand(
             expand(
@@ -37,49 +21,19 @@ rule all:
             resultsdir=config["resultsdir"],
         )
 
-rule unzip:
-    input:
-        expand("{datadir}/{{folder}}.zip", datadir=config['datadir'])
-    output:
-        directory(expand("{datadir}/{{folder}}", datadir=config['datadir']))
-    shell:
-        "unzip -q -d {output} {input}"
+module raw_to_bids:
+    snakefile:
+        "rules/raw_to_bids.smk"
+    config: config
 
-rule tidy_dicoms:
-    input:
-        lambda wildards: MAPPING[(wildards.subject, wildards.session)]
-    output:
-        directory("{resultsdir}/tidy/sub_{subject}/ses_{session}")
-    run:
-        output_folder = Path(output[0])
-        for dicom_file in Path(input[0]).rglob("*.dcm"):
-            target_folder = output_folder / dicom_file.parent.name
-            target_folder.mkdir(parents=True, exist_ok=True)
-            (target_folder / dicom_file.name).symlink_to(dicom_file)
+use rule * from raw_to_bids as raw_to_bids_*
 
-checkpoint heudiconv:
-    input:
-        "{resultsdir}/tidy/sub_{subject}/ses_{session}"
-    output:
-        directory("{resultsdir}/bids/sub-{subject}/ses-{session}"),
-        directory("{resultsdir}/bids/.heudiconv/{subject}/ses-{session}")
-    container:
-        "docker://ghcr.io/jennan/heudiconv:jpeg2000_ci"
-    threads: config["heudiconv"]["threads"]
-    resources:
-        cpus=lambda wildcards, threads: threads,
-        mem_mb=config["heudiconv"]["mem_mb"],
-        time_min=config["heudiconv"]["time_min"]
-    shell:
-        "heudiconv "
-        "--dicom_dir_template '{wildcards.resultsdir}/tidy/sub_{{subject}}/ses_{{session}}/*/*' "
-        "--outdir {wildcards.resultsdir}/bids "
-        "--heuristic {config[heudiconv][heuristic]} "
-        "--subjects {wildcards.subject} "
-        "--ses {wildcards.session} "
-        "--converter dcm2niix "
-        "--bids "
-        "--overwrite"
+module dwi_misc:
+    snakefile:
+        "rules/dwi_misc.smk"
+    config: config
+
+use rule * from dwi_misc as dwi_misc_*
 
 def strip_extensions(filename):
     """helper function to remove all extensions from a file path"""
@@ -106,127 +60,6 @@ rule hd_bet:
         "hd-bet -i {input}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_T1w.nii.gz "
         "-o {params.output} "
         "-tta 0 -mode fast -device cpu"
-
-rule convert_pre_denoise:
-    input:
-        "{resultsdir}/bids/sub-{subject}/ses-{session}"
-    output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif"
-    container:
-        "docker://mrtrix3/mrtrix3:3.0.4"
-    shell:
-        "mrconvert {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.nii.gz "
-        "-fslgrad {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bvec "
-        "{input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bval "
-        "{output}"
-
-rule denoise:
-    input:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi.mif",
-    output:
-        denoised="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif",
-        noise="{derivatives}/sub-{subject}_ses-{session}_{entity}_noise.mif"
-    container:
-        "docker://mrtrix3/mrtrix3:3.0.4"
-    threads: config["denoise"]["threads"]
-    resources:
-        cpus=lambda wildcards, threads: threads,
-        mem_mb=config["denoise"]["mem_mb"],
-        time_min=config["denoise"]["time_min"]
-    shell:
-        "dwidenoise -nthreads {threads} {input} {output.denoised} -noise {output.noise}"
-
-rule fslroi:
-    input:
-        "{resultsdir}/bids/sub-{subject}/ses-{session}"
-    output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
-    container:
-        "docker://mrtrix3/mrtrix3:3.0.4"
-    shell:
-        "fslroi {input}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.nii.gz "
-        "{output} 0 1"
-
-rule bet:
-    input:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
-    output:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
-    container:
-        "docker://mrtrix3/mrtrix3:3.0.4"
-    shell:
-        "bet {input} {output}"
-
-rule convert_pre_bias:
-    input:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
-    output:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif"
-    container:
-        "docker://mrtrix3/mrtrix3:3.0.4"
-    shell:
-        "mrconvert {input} {output}"
-
-rule bias_correction:
-    message: "Bias field correction"
-    input:
-        data="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_denoise.mif",
-        mask="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_mask.mif",
-    output:
-        debiased="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif",
-        bias="{derivatives}/sub-{subject}_ses-{session}_{entity}_bias.mif"
-    container:
-        "docker://mrtrix3/mrtrix3:3.0.4"
-    shell:
-        "dwibiascorrect fsl {input.data} {output.debiased} -mask {input.mask} -bias {output.bias}"
-
-rule ringing_correction:
-    message: "Ringing artifact correction"
-    input:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbc.mif"
-    output:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbcdegibbs.mif"
-    container:
-        "docker://mrtrix3/mrtrix3:3.0.4"
-    threads: config["ringing_correction"]["threads"]
-    resources:
-        cpus=lambda wildcards, threads: threads,
-        mem_mb=config["ringing_correction"]["mem_mb"],
-        time_min=config["ringing_correction"]["time_min"]
-    shell:
-        # TODO not working "mrdegibbs -nthreads {threads} {input} {output}"
-        "cp {input} {output}"
-
-rule convert_post_ringing:
-    input:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbcdegibbs.mif"
-    output:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz"
-    container:
-        "docker://mrtrix3/mrtrix3:3.0.4"
-    shell:
-        "mrconvert {input} {output}"
-
-rule synb0_disco:
-    input:
-        bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
-        b0="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
-    output:
-        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}")
-    container:
-        "docker://leonyichencai/synb0-disco:v3.0"
-    threads: config["synb0_disco"]["threads"]
-    resources:
-        cpus=lambda wildcards, threads: threads,
-        mem_mb=config["synb0_disco"]["mem_mb"],
-        time_min=config["synb0_disco"]["time_min"]
-    shell:
-        "workflow/scripts/synb0_disco_pipeline.bash "
-        "{config[fs_license]} "
-        "{input.bids}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_T1w.nii.gz "
-        "{input.b0} "
-        "{config[acqparams]} "
-        "{output}"
 
 rule eddy:
     message: "Eddy current correction"
