@@ -3,20 +3,6 @@ from pathlib import Path
 include: "list_scans.smk"
 
 MAPPING = list_scans(config["datadir"], config["ethics_prefix"])
-SUBJECTS, SESSIONS = zip(*MAPPING)
-
-rule all:
-    localrule: True
-    input:
-        expand(
-            expand(
-                "{{resultsdir}}/bids/sub-{subject}/ses-{session}",
-                zip,
-                subject=SUBJECTS,
-                session=SESSIONS,
-            ),
-            resultsdir=config["resultsdir"],
-        )
 
 rule unzip:
     input:
