@@ -14,7 +14,7 @@ cluster:
 default-resources:
     - partition=milan
     - cpus=1
-    - gpu=0
+    - gpu="0"
     - mem_mb=512
     - time_min=5
     - slurm_extra=""
