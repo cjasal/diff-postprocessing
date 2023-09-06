@@ -300,4 +300,5 @@ rule dwi_preprocessing:
         directory("{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}")
     shell:
         # TODO copy or move instead of linking?
+        # TODO use subdirectories (anat and dwi)
         "mkdir -p {output} && ln -s {input} {output}"
