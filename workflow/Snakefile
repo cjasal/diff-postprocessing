@@ -1,3 +1,5 @@
+from pathlib import Path
+
 configfile: "config/config.yaml"
 
 include: "rules/list_scans.smk"
@@ -52,7 +54,6 @@ def get_derivatives_filenames(wildcards):
         "/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.eddy_rotated_bvecs"
     ]
     filenames_pattern = [basedir + pattern for pattern in filenames_pattern]
-
     filenames = expand(filenames_pattern, entity=entities, **wildcards)
 
     return filenames
@@ -63,7 +64,10 @@ rule dwi_preprocessing:
         get_derivatives_filenames
     output:
         directory("{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}")
-    shell:
+    run:
         # TODO copy or move instead of linking?
-        # TODO use subdirectories (anat and dwi)
-        "mkdir -p {output} && ln -s {input} {output}"
+        output_folder = Path(output[0])
+        for result_file in map(Path, input):
+            target_folder = output_folder / result_file.parent.name
+            target_folder.mkdir(parents=True, exist_ok=True)
+            (target_folder / result_file.name).symlink_to(result_file)
