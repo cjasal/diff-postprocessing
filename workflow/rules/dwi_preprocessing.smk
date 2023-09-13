@@ -203,6 +203,11 @@ rule eddy_quad:
         output=lambda wildcards, output: strip_extensions(output[0])
     conda:
         "../envs/eddy.yaml"
+    threads: config["eddy_quad"]["threads"]
+    resources:
+        cpus=lambda wildcards, threads: threads,
+        mem_mb=config["eddy_quad"]["mem_mb"],
+        time_min=config["eddy_quad"]["time_min"]
     shell:
         "export FSLDIR=$(dirname $(which eddy_cpu))/.. && "
         ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
