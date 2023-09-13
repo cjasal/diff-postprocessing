@@ -6,3 +6,4 @@ dependencies:
   - fsl-eddy-cuda-10.2
   - cudatoolkit=10.2
   - fsl-eddy_qc
+  - fsl-miscvis
