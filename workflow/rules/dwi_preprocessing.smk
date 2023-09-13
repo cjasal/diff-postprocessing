@@ -191,8 +191,6 @@ rule eddy:
         "--verbose "
         "{config[eddy][extra_args]}"
 
-# eddy_quad <eddy_output_basename> -idx <index_file> -par <acqparams_file> -m <dwi_brain_mask> -b <bvals>
-
 rule eddy_quad:
     message: "Eddy Quality Control"
     input:
@@ -213,5 +211,4 @@ rule eddy_quad:
         "-m {input.mask} "
         "-b {input.bids}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bval "
         "-idx {config[index]} "
-        "-par {config[acqparams]} "
-
+        "-par {config[acqparams]}"
