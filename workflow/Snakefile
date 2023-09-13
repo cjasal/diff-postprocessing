@@ -94,8 +94,8 @@ def get_eddy_qc_folders(wildcards):
 
         # generate the list of eddy files
         eddy_folder_pattern = (
-            "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy"
-            "/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.qc"
+            "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad"
+            "/sub-{subject}_ses-{session}_{entity}"
         )
         eddy_folder, = expand(
             eddy_folder_pattern,
@@ -117,8 +117,7 @@ rule quad_folders:
     output:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad_folders.txt"
     run:
-        eddy_folders = [eddy_file.rsplit(".", maxsplit=1)[0] for eddy_file in input]
-        Path(output[0]).write_text("\n".join(eddy_folders))
+        Path(output[0]).write_text("\n".join(input))
 
 rule eddy_squad:
     input:

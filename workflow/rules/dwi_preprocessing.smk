@@ -198,9 +198,9 @@ rule eddy_quad:
         eddy="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
         mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     output:
-        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.qc")
+        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad/sub-{subject}_ses-{session}_{entity}")
     params:
-        output=lambda wildcards, output: strip_extensions(output[0])
+        basename=lambda wildcards, input: strip_extensions(input["eddy"])
     conda:
         "../envs/eddy.yaml"
     threads: config["eddy_quad"]["threads"]
@@ -212,7 +212,8 @@ rule eddy_quad:
         "export FSLDIR=$(dirname $(which eddy_cpu))/.. && "
         ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
         "eddy_quad "
-        "{params.output} "
+        "{params.basename} "
+        "-o {output} "
         "-m {input.mask} "
         "-b {input.bids}/dwi/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_dwi.bval "
         "-idx {config[index]} "
