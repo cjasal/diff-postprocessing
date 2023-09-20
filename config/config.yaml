@@ -41,3 +41,13 @@ eddy:
     time_min: 60
     gpu: "P100:1"
     slurm_extra: "--partition gpu"
+
+eddy_quad:
+    threads: 2
+    mem_mb: 2000
+    time_min: 30
+
+eddy_squad:
+    threads: 2
+    mem_mb: 2000
+    time_min: 30

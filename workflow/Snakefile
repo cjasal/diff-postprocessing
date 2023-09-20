@@ -19,6 +19,10 @@ rule all:
                 session=SESSIONS,
             ),
             resultsdir=config["resultsdir"],
+        ),
+        expand(
+            "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad",
+            resultsdir=config["resultsdir"]
         )
 
 module bids_conversion:
@@ -39,6 +43,7 @@ def get_derivatives_filenames(wildcards):
     # create a dependency on heudiconv rule output
     checkpoints.heudiconv.get(**wildcards)
 
+    # find all entities (e.g. runs) for a subject/session pair
     bids_pattern = (
         f"{wildcards.resultsdir}/bids/sub-{wildcards.subject}/ses-{wildcards.session}"
         f"/anat/sub-{wildcards.subject}_ses-{wildcards.session}_"
@@ -46,6 +51,7 @@ def get_derivatives_filenames(wildcards):
     )
     entities, = glob_wildcards(bids_pattern)
 
+    # generate the list of files that we want to use as final products of the pipeline
     basedir = "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives"
     filenames_pattern = [
         "/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
@@ -71,3 +77,61 @@ rule dwi_preprocessing:
             target_folder = output_folder / result_file.parent.name
             target_folder.mkdir(parents=True, exist_ok=True)
             (target_folder / result_file.name).symlink_to(result_file)
+
+def get_eddy_qc_folders(wildcards):
+    eddy_folders = []
+
+    for subject, session in zip(SUBJECTS, SESSIONS):
+        # create a dependency on heudiconv rule output
+        checkpoints.heudiconv.get(session=session, subject=subject, **wildcards)
+
+        # find all entities (e.g. runs) for a subject/session pair
+        bids_pattern = (
+            f"{wildcards.resultsdir}/bids/sub-{subject}/ses-{session}"
+            f"/anat/sub-{subject}_ses-{session}_{{entity}}_T1w.nii.gz"
+        )
+        entities, = glob_wildcards(bids_pattern)
+
+        # generate the list of eddy files
+        eddy_folder_pattern = (
+            "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad"
+            "/sub-{subject}_ses-{session}_{entity}"
+        )
+        eddy_folder, = expand(
+            eddy_folder_pattern,
+            entity=entities,
+            session=session,
+            subject=subject,
+            **wildcards
+        )
+
+        eddy_folders.append(eddy_folder)
+
+    return eddy_folders
+
+# TODO make it temporary
+rule quad_folders:
+    localrule: True
+    input:
+        get_eddy_qc_folders
+    output:
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad_folders.txt"
+    run:
+        Path(output[0]).write_text("\n".join(input))
+
+rule eddy_squad:
+    input:
+        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad_folders.txt"
+    output:
+        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad")
+    conda:
+        "envs/eddy.yaml"
+    threads: config["eddy_squad"]["threads"]
+    resources:
+        cpus=lambda wildcards, threads: threads,
+        mem_mb=config["eddy_squad"]["mem_mb"],
+        time_min=config["eddy_squad"]["time_min"]
+    shell:
+        "export FSLDIR=$(dirname $(which eddy_cpu))/.. && "
+        ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
+        "eddy_squad {input} -o {output}"
