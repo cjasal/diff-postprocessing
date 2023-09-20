@@ -73,12 +73,13 @@ rule bet:
     input:
         "{derivatives}/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     output:
-        "{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
+        dwibrain="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain.nii.gz",
+        dwimask="{derivatives}/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     group: "dwi_misc"
     shell:
-        "bet {input} {output}"
+        "bet {input} {output.dwibrain} -m "
 
 rule convert_pre_bias:
     input:
@@ -120,8 +121,8 @@ rule ringing_correction:
         time_min=config["ringing_correction"]["time_min"]
     group: "dwi_misc"
     shell:
-        # TODO not working "mrdegibbs -nthreads {threads} {input} {output}"
-        "cp {input} {output}"
+        "mrdegibbs -nthreads {threads} {input} {output}"
+        #"cp {input} {output}"
 
 rule convert_post_ringing:
     input:
