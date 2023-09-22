@@ -31,7 +31,7 @@ checkpoint heudiconv:
         directory("{resultsdir}/bids/sub-{subject}/ses-{session}"),
         directory("{resultsdir}/bids/.heudiconv/{subject}/ses-{session}")
     container:
-        "docker://ghcr.io/jennan/heudiconv:jpeg2000_ci"
+        "docker://ghcr.io/mataimri/heudiconv:jpeg2000_ci"
     threads: config["heudiconv"]["threads"]
     resources:
         cpus=lambda wildcards, threads: threads,
