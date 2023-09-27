@@ -20,7 +20,7 @@ rule hd_bet:
     resources:
         cpus=lambda wildcards, threads: threads,
         mem_mb=config["hd_bet"]["mem_mb"],
-        time_min=config["hd_bet"]["time_min"]
+        runtime=config["hd_bet"]["time_min"]
     shell:
         "hd-bet -i {input}/anat/sub-{wildcards.subject}_ses-{wildcards.session}_{wildcards.entity}_T1w.nii.gz "
         "-o {params.output} "
@@ -52,7 +52,7 @@ rule denoise:
     resources:
         cpus=lambda wildcards, threads: threads,
         mem_mb=config["denoise"]["mem_mb"],
-        time_min=config["denoise"]["time_min"]
+        runtime=config["denoise"]["time_min"]
     group: "dwi_misc"
     shell:
         "dwidenoise -nthreads {threads} {input} {output.denoised} -noise {output.noise}"
@@ -118,7 +118,7 @@ rule ringing_correction:
     resources:
         cpus=lambda wildcards, threads: threads,
         mem_mb=config["ringing_correction"]["mem_mb"],
-        time_min=config["ringing_correction"]["time_min"]
+        runtime=config["ringing_correction"]["time_min"]
     group: "dwi_misc"
     shell:
         "mrdegibbs -nthreads {threads} {input} {output}"
@@ -147,7 +147,7 @@ rule synb0_disco:
     resources:
         cpus=lambda wildcards, threads: threads,
         mem_mb=config["synb0_disco"]["mem_mb"],
-        time_min=config["synb0_disco"]["time_min"]
+        runtime=config["synb0_disco"]["time_min"]
     shell:
         "workflow/scripts/synb0_disco_pipeline.bash "
         "{config[fs_license]} "
@@ -174,7 +174,7 @@ rule eddy:
     resources:
         cpus=lambda wildcards, threads: threads,
         mem_mb=config["eddy"]["mem_mb"],
-        time_min=config["eddy"]["time_min"],
+        runtime=config["eddy"]["time_min"],
         gpu=config["eddy"]["gpu"],
         slurm_extra=config["eddy"].get("slurm_extra", "")
     shell:
@@ -208,7 +208,7 @@ rule eddy_quad:
     resources:
         cpus=lambda wildcards, threads: threads,
         mem_mb=config["eddy_quad"]["mem_mb"],
-        time_min=config["eddy_quad"]["time_min"]
+        runtime=config["eddy_quad"]["time_min"]
     shell:
         "export FSLDIR=$(dirname $(which eddy_cpu))/.. && "
         ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "

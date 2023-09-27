@@ -131,7 +131,7 @@ rule eddy_squad:
     resources:
         cpus=lambda wildcards, threads: threads,
         mem_mb=config["eddy_squad"]["mem_mb"],
-        time_min=config["eddy_squad"]["time_min"]
+        runtime=config["eddy_squad"]["time_min"]
     shell:
         "export FSLDIR=$(dirname $(which eddy_cpu))/.. && "
         ". ${{FSLDIR}}/etc/fslconf/fsl.sh && "
