@@ -25,20 +25,14 @@ rule all:
     default_target: True
     input:
         rules.tidy_snake_all.input,
+        # TODO issues with multiple identical SUBJECT/SESSION pairs?
         expand(
-            # TODO issues with multiple identical SUBJECT/SESSION pairs?
-            expand(
-                "{{resultsdir}}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}",
-                zip,
-                subject=SUBJECTS,
-                session=SESSIONS,
-            ),
-            resultsdir=config["resultsdir"],
+            f"{config['resultsdir']}/bids/derivatives/dwi_preprocessing/sub-{{subject}}/ses-{{session}}",
+            zip,
+            subject=SUBJECTS,
+            session=SESSIONS,
         ),
-        expand(
-            "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad",
-            resultsdir=config["resultsdir"]
-        )
+        f"{config['resultsdir']}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad"
 
 def get_derivatives_filenames(wildcards):
     # find all entities (e.g. runs) for a subject/session pair
