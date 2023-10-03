@@ -1,11 +1,8 @@
 from pathlib import Path
 
+from utils import list_sessions
+
 configfile: "config/config.yaml"
-
-include: "rules/list_scans.smk"
-
-MAPPING = list_scans(config["datadir"], config["ethics_prefix"])
-SUBJECTS, SESSIONS = zip(*MAPPING)
 
 module tidy_snake:
     snakefile:
@@ -20,6 +17,8 @@ module dwi_preprocessing:
     config: config
 
 use rule * from dwi_preprocessing as dwi_preprocessing_*
+
+SUBJECTS, SESSIONS, ENTITIES = list_sessions(config['resultsdir'])
 
 rule all:
     localrule: True
