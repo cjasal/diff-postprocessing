@@ -4,6 +4,13 @@ import yaml
 from snakemake.io import glob_wildcards
 
 
+def strip_extensions(filename):
+    """helper function to remove all extensions from a file path"""
+    filepath = Path(filename)
+    prefix = filepath.stem.split(".")[0]
+    return filepath.parent / prefix
+
+
 def is_valid_session(resultsdir, subject, session, entity):
     """assess if a session if valid based on the corresponding QC status file"""
 
