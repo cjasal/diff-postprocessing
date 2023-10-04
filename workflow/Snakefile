@@ -41,6 +41,25 @@ def list_valid_sessions(resultsdir):
 
 SUBJECTS, SESSIONS, ENTITIES = list_valid_sessions(config['resultsdir'])
 
+def eddy_qc_folders(resultsdir):
+    """list all eddy folders from all subject/session/entities triplet"""
+
+    eddy_folders = []
+    for subject, session, entity in zip(SUBJECTS, SESSIONS, ENTITIES):
+        eddy_folder = (
+            f"{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad"
+            f"/sub-{subject}_ses-{session}_{entity}"
+        )
+        eddy_folders.append(eddy_folder)
+
+    return eddy_folders
+
+EDDY_QC_OUTPUTS = eddy_qc_folders(config['resultsdir'])
+if len(SUBJECTS) > 1:  # run SQUAD only if there is more than 1 recording
+    EDDY_QC_OUTPUTS.append(
+        f"{config['resultsdir']}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad"
+    )
+
 module tidy_snake:
     snakefile:
         github("MataiMRI/tidySnake", path="workflow/Snakefile", commit="3e900ec")  # TODO use tag
@@ -60,7 +79,7 @@ rule all:
             subject=SUBJECTS,
             session=SESSIONS,
         ),
-        f"{config['resultsdir']}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad"
+        EDDY_QC_OUTPUTS
 
 rule hd_bet:
     input:
@@ -309,35 +328,15 @@ rule dwi_preprocessing:
             target_folder.mkdir(parents=True, exist_ok=True)
             (target_folder / result_file.name).symlink_to(result_file)
 
-def get_eddy_qc_folders(wildcards):
-    """list all eddy folders from all subject/session/entities triplet"""
-    eddy_folders = []
-    for subject, session, entities in zip(SUBJECTS, SESSIONS, ENTITIES):
-        eddy_folder_pattern = (
-            "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad"
-            "/sub-{subject}_ses-{session}_{entity}"
-        )
-        eddy_folder, = expand(
-            eddy_folder_pattern,
-            entity=entities,
-            session=session,
-            subject=subject,
-            **wildcards
-        )
-        eddy_folders.append(eddy_folder)
-    return eddy_folders
-
-# TODO make it temporary
 rule quad_folders:
     localrule: True
     input:
-        get_eddy_qc_folders
+        lambda wilcards: eddy_qc_folders(wilcards.resultsdir)
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad_folders.txt"
+        temp("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad_folders.txt")
     run:
         Path(output[0]).write_text("\n".join(input))
 
-# TODO skip if no quad folders or only one
 rule eddy_squad:
     input:
         "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad_folders.txt"
