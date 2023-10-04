@@ -43,7 +43,7 @@ SUBJECTS, SESSIONS, ENTITIES = list_valid_sessions(config['resultsdir'])
 
 module tidy_snake:
     snakefile:
-        github("MataiMRI/tidySnake", path="workflow/Snakefile", branch="main")  # TODO use tag
+        github("MataiMRI/tidySnake", path="workflow/Snakefile", commit="3e900ec")  # TODO use tag
     config: config
 
 use rule * from tidy_snake as tidy_snake_*
