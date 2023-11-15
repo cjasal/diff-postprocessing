@@ -10,7 +10,7 @@ def strip_extensions(filename):
 
 module tidy_snake:
     snakefile:
-        github("MataiMRI/tidySnake", path="workflow/Snakefile", tag="v0.1.1")
+        github("MataiMRI/tidySnake", path="workflow/Snakefile", tag="v0.2.0")
     config: config
 
 use rule * from tidy_snake as tidy_snake_*
@@ -21,7 +21,7 @@ def eddy_qc_folders(resultsdir):
     """list all eddy folders from all subject/session/entities triplet"""
 
     eddy_folders = []
-    for subject, session, entity in zip(RUNS.subjects, RUNS.sessions, RUNS.entities):
+    for subject, session, entity in RUNS:
         eddy_folder = (
             f"{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad"
             f"/sub-{subject}_ses-{session}_{entity}"
@@ -31,7 +31,7 @@ def eddy_qc_folders(resultsdir):
     return eddy_folders
 
 EDDY_QC_OUTPUTS = eddy_qc_folders(config['resultsdir'])
-if len(RUNS.subjects) > 1:  # run SQUAD only if there is more than 1 recording
+if len(RUNS) > 1:  # run SQUAD only if there is more than 1 recording
     EDDY_QC_OUTPUTS.append(
         f"{config['resultsdir']}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad"
     )
@@ -265,9 +265,8 @@ rule eddy_quad:
 
 def get_derivatives_filenames(wildcards):
     # find all entities (e.g. runs) for a subject/session pair
-    runs_infos = zip(RUNS.subjects, RUNS.sessions, RUNS.entities)
     entities = [
-        entity for subject, session, entity in runs_infos
+        entity for subject, session, entity in RUNS
         if subject == wildcards.subject and session == wildcards.session
     ]
 
