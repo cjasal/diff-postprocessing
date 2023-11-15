@@ -1,5 +1,4 @@
 from pathlib import Path
-import yaml
 
 configfile: "config/config.yaml"
 
@@ -9,43 +8,20 @@ def strip_extensions(filename):
     prefix = filepath.stem.split(".")[0]
     return filepath.parent / prefix
 
-def is_valid_session(resultsdir, subject, session, entity):
-    """assess if a session if valid based on the corresponding QC status file"""
+module tidy_snake:
+    snakefile:
+        github("MataiMRI/tidySnake", path="workflow/Snakefile", tag="v0.1.1")
+    config: config
 
-    qc_file = Path(
-        f"{resultsdir}/bids/derivatives/mriqc/"
-        f"/sub-{subject}_ses-{session}_{entity}_qc.yaml"
-    )
-    qc_data = yaml.safe_load(qc_file.read_text())
-    qc_fields = [field for field in qc_data if field.endswith("_qc")]
-    is_valid = all(qc_data[field] for field in qc_fields)
+use rule * from tidy_snake as tidy_snake_*
 
-    return is_valid
-
-def list_valid_sessions(resultsdir):
-    """list all valid sessions from every subjects, based on QC status files"""
-
-    patterns = glob_wildcards(
-        f"{resultsdir}/bids/derivatives/mriqc/"
-        "/sub-{subject}_ses-{session}_{entity}_qc.yaml"
-    )
-
-    subjects, sessions, entities = [], [], []
-    for subject, session, entity in zip(*patterns):
-        if is_valid_session(resultsdir, subject, session, entity):
-            subjects.append(subject)
-            sessions.append(session)
-            entities.append(entity)
-
-    return subjects, sessions, entities
-
-SUBJECTS, SESSIONS, ENTITIES = list_valid_sessions(config['resultsdir'])
+RUNS, TEMPLATES = tidy_snake.list_valid_runs(config['resultsdir'])
 
 def eddy_qc_folders(resultsdir):
     """list all eddy folders from all subject/session/entities triplet"""
 
     eddy_folders = []
-    for subject, session, entity in zip(SUBJECTS, SESSIONS, ENTITIES):
+    for subject, session, entity in zip(RUNS.subjects, RUNS.sessions, RUNS.entities):
         eddy_folder = (
             f"{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad"
             f"/sub-{subject}_ses-{session}_{entity}"
@@ -55,17 +31,10 @@ def eddy_qc_folders(resultsdir):
     return eddy_folders
 
 EDDY_QC_OUTPUTS = eddy_qc_folders(config['resultsdir'])
-if len(SUBJECTS) > 1:  # run SQUAD only if there is more than 1 recording
+if len(RUNS.subjects) > 1:  # run SQUAD only if there is more than 1 recording
     EDDY_QC_OUTPUTS.append(
         f"{config['resultsdir']}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad"
     )
-
-module tidy_snake:
-    snakefile:
-        github("MataiMRI/tidySnake", path="workflow/Snakefile", commit="3e900ec")  # TODO use tag
-    config: config
-
-use rule * from tidy_snake as tidy_snake_*
 
 rule all:
     localrule: True
@@ -76,8 +45,8 @@ rule all:
         expand(
             f"{config['resultsdir']}/bids/derivatives/dwi_preprocessing/sub-{{subject}}/ses-{{session}}",
             zip,
-            subject=SUBJECTS,
-            session=SESSIONS,
+            subject=RUNS.subjects,
+            session=RUNS.sessions,
         ),
         EDDY_QC_OUTPUTS
 
@@ -296,8 +265,9 @@ rule eddy_quad:
 
 def get_derivatives_filenames(wildcards):
     # find all entities (e.g. runs) for a subject/session pair
+    runs_infos = zip(RUNS.subjects, RUNS.sessions, RUNS.entities)
     entities = [
-        entity for subject, session, entity in zip(SUBJECTS, SESSIONS, ENTITIES)
+        entity for subject, session, entity in runs_infos
         if subject == wildcards.subject and session == wildcards.session
     ]
 
