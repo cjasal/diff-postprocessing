@@ -10,12 +10,12 @@ def strip_extensions(filename):
 
 module tidy_snake:
     snakefile:
-        github("MataiMRI/tidySnake", path="workflow/Snakefile", tag="v0.2.0")
+        github("MataiMRI/tidySnake", path="workflow/Snakefile", tag="v0.3.0")
     config: config
 
 use rule * from tidy_snake as tidy_snake_*
 
-RUNS, TEMPLATES = tidy_snake.list_valid_runs(config['resultsdir'])
+RUNS, TEMPLATES = tidy_snake.list_valid_runs(config['resultsdir'], suffix="_dwi")
 
 def eddy_qc_folders(resultsdir):
     """list all eddy folders from all subject/session/entities triplet"""
