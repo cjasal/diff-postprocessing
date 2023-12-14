@@ -17,45 +17,53 @@ use rule * from tidy_snake as tidy_snake_*
 
 RUNS, TEMPLATES = tidy_snake.list_valid_runs(config['resultsdir'], suffix="_dwi")
 
-def eddy_qc_folders(resultsdir):
-    """list all eddy folders from all subject/session/entities triplet"""
+BRAIN_MASKS_OUTPUTS = expand(
+    f"{config['resultsdir']}/bids/derivatives/mrtrix3"
+    "/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
+    zip,
+    subject=RUNS.subjects,
+    session=RUNS.sessions,
+    entity=RUNS.entities,
+)
 
-    eddy_folders = []
-    for subject, session, entity in RUNS:
-        eddy_folder = (
-            f"{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad"
-            f"/sub-{subject}_ses-{session}_{entity}"
-        )
-        eddy_folders.append(eddy_folder)
+HD_BET_OUTPUTS = expand(
+    f"{config['resultsdir']}/bids/derivatives/hd_bet"
+    "/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
+    zip,
+    subject=RUNS.subjects,
+    session=RUNS.sessions,
+    entity=RUNS.entities,
+)
 
-    return eddy_folders
-
-EDDY_QC_OUTPUTS = eddy_qc_folders(config['resultsdir'])
-if len(RUNS) > 1:  # run SQUAD only if there is more than 1 recording
-    EDDY_QC_OUTPUTS.append(
-        f"{config['resultsdir']}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad"
+def eddy_quad_folders(resultsdir):
+    """list all EDDY QUAD folders from all subject/session/entities triplet"""
+    return expand(
+        f"{resultsdir}/bids/derivatives/eddy_quad/sub-{{subject}}_ses-{{session}}_{{entity}}",
+        zip,
+        subject=RUNS.subjects,
+        session=RUNS.sessions,
+        entity=RUNS.entities,
     )
+
+EDDY_QC_OUTPUTS = eddy_quad_folders(config['resultsdir'])
+if len(RUNS) > 1:  # run SQUAD only if there is more than 1 recording
+    EDDY_QC_OUTPUTS.append(f"{config['resultsdir']}/bids/derivatives/eddy_squad")
 
 rule all:
     localrule: True
     default_target: True
     input:
         rules.tidy_snake_all.input,
-        # TODO issues with multiple identical SUBJECT/SESSION pairs?
-        expand(
-            f"{config['resultsdir']}/bids/derivatives/dwi_preprocessing/sub-{{subject}}/ses-{{session}}",
-            zip,
-            subject=RUNS.subjects,
-            session=RUNS.sessions,
-        ),
+        BRAIN_MASKS_OUTPUTS,
+        HD_BET_OUTPUTS,
         EDDY_QC_OUTPUTS
 
 rule hd_bet:
     input:
         "{resultsdir}/bids/sub-{subject}/ses-{session}"
     output:
-        brain="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/hd_bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
-        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/hd_bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_{entity}_T1w_brain_mask.nii.gz"
+        brain="{resultsdir}/bids/derivatives/hd_bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
+        mask="{resultsdir}/bids/derivatives/hd_bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_{entity}_T1w_brain_mask.nii.gz"
     conda:
         "envs/hd_bet.yaml"
     params:
@@ -75,7 +83,7 @@ rule convert_pre_denoise:
     input:
         "{resultsdir}/bids/sub-{subject}/ses-{session}"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif"
+        "{resultsdir}/bids/derivatives/mrtrix3/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi.mif"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     group: "dwi_misc"
@@ -106,7 +114,7 @@ rule fslroi:
     input:
         "{resultsdir}/bids/sub-{subject}/ses-{session}"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
+        "{resultsdir}/bids/derivatives/mrtrix3/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     container:
         "docker://mrtrix3/mrtrix3:3.0.4"
     group: "dwi_misc"
@@ -182,9 +190,9 @@ rule convert_post_ringing:
 rule synb0_disco:
     input:
         bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
-        b0="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
+        b0="{resultsdir}/bids/derivatives/mrtrix3/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_nodif.nii.gz"
     output:
-        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}")
+        directory("{resultsdir}/bids/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}")
     params:
         template=lambda wildcards: TEMPLATES[wildcards.subject][wildcards.session]
     container:
@@ -206,12 +214,12 @@ rule eddy:
     message: "Eddy current correction"
     input:
         bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
-        dwidnbcdg="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz",
-        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
-        synb0_disco="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}"
+        dwidnbcdg="{resultsdir}/bids/derivatives/mrtrix3/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwidnbcdg.nii.gz",
+        mask="{resultsdir}/bids/derivatives/mrtrix3/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
+        synb0_disco="{resultsdir}/bids/derivatives/synb0_disco/sub-{subject}_ses-{session}_{entity}"
     output:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.eddy_rotated_bvecs"
+        "{resultsdir}/bids/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
+        "{resultsdir}/bids/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.eddy_rotated_bvecs"
     params:
         output=lambda wildcards, output: strip_extensions(output[0])
     conda:
@@ -242,10 +250,10 @@ rule eddy_quad:
     message: "Eddy Quality Control"
     input:
         bids="{resultsdir}/bids/sub-{subject}/ses-{session}",
-        eddy="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
-        mask="{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
+        eddy="{resultsdir}/bids/derivatives/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
+        mask="{resultsdir}/bids/derivatives/mrtrix3/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz"
     output:
-        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad/sub-{subject}_ses-{session}_{entity}")
+        directory("{resultsdir}/bids/derivatives/eddy_quad/sub-{subject}_ses-{session}_{entity}")
     params:
         basename=lambda wildcards, input: strip_extensions(input["eddy"])
     conda:
@@ -266,54 +274,20 @@ rule eddy_quad:
         "-idx {config[index]} "
         "-par {config[acqparams]}"
 
-def get_derivatives_filenames(wildcards):
-    # find all entities (e.g. runs) for a subject/session pair
-    entities = [
-        entity for subject, session, entity in RUNS
-        if subject == wildcards.subject and session == wildcards.session
-    ]
-
-    # generate the list of files that we want to use as final products of the pipeline
-    basedir = "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives"
-    filenames_pattern = [
-        "/misc/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_dwi_brain_mask.nii.gz",
-        "/hd_bet/sub-{subject}/ses-{session}/anat/sub-{subject}_ses-{session}_{entity}_T1w_brain.nii.gz",
-        "/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.nii.gz",
-        "/eddy/sub-{subject}/ses-{session}/dwi/sub-{subject}_ses-{session}_{entity}_eddy.eddy_rotated_bvecs"
-    ]
-    filenames_pattern = [basedir + pattern for pattern in filenames_pattern]
-    filenames = expand(filenames_pattern, entity=entities, **wildcards)
-
-    return filenames
-
-rule dwi_preprocessing:
-    localrule: True
-    input:
-        get_derivatives_filenames
-    output:
-        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/sub-{subject}/ses-{session}")
-    run:
-        # TODO copy or move instead of linking?
-        output_folder = Path(output[0])
-        for result_file in map(Path, input):
-            target_folder = output_folder / result_file.parent.name
-            target_folder.mkdir(parents=True, exist_ok=True)
-            (target_folder / result_file.name).symlink_to(result_file)
-
 rule quad_folders:
     localrule: True
     input:
         lambda wilcards: eddy_qc_folders(wilcards.resultsdir)
     output:
-        temp("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad_folders.txt")
+        temp("{resultsdir}/bids/derivatives/eddy_quad_folders.txt")
     run:
         Path(output[0]).write_text("\n".join(input))
 
 rule eddy_squad:
     input:
-        "{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_quad_folders.txt"
+        "{resultsdir}/bids/derivatives/eddy_quad_folders.txt"
     output:
-        directory("{resultsdir}/bids/derivatives/dwi_preprocessing/derivatives/eddy_squad")
+        directory("{resultsdir}/bids/derivatives/eddy_squad")
     conda:
         "envs/eddy.yaml"
     threads: config["eddy_squad"]["threads"]
