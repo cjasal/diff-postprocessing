@@ -62,22 +62,108 @@ Once the workflow has completed, results are organised as follows:
 <resultsdir>
 └── bids
     ├── derivatives
-    │   └── mriqc
-    │       ├── logs
-    │       │   └── ...  # log files in case MRIQC crashes
-    │       ├── sub-<subject>
-    │       │   ├── figures
-    │       │   │   ├── sub-<subject>_ses-<session>_<entities>_<suffix>.svg
-    │       │   │   └── ...
-    │       │   └── ses-<session>
-    │       │       ├── <modality>
-    │       │       │   └── sub-<subject>_ses-<session>_<entities>_<suffix>.json
-    │       │       └── ...
-    │       ├── dataset_description.json
-    │       ├── quality_control.tsv
-    │       ├── sub-<subject>_ses-<session>_qc.yaml
-    │       ├── sub-<subject>_ses-<session>_<entities>_<suffix>.html
-    │       └── ...
+    │   ├── eddy
+    │   │   └── sub-<subject>
+    │   │       └── ses-<session>
+    │   │           └── dwi
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_cnr_maps.nii.gz
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_command_txt
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy.json
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_movement_over_time
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_movement_rms
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_outlier_free_data.nii.gz
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_outlier_map
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_outlier_n_sqr_stdev_map
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_outlier_n_stdev_map
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_outlier_report
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_parameters
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_post_eddy_shell_alignment_parameters
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_post_eddy_shell_PE_translation_parameters
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_residuals.nii.gz
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_restricted_movement_rms
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_rotated_bvecs
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_shell_indicies.json
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_eddy.eddy_values_of_all_input_parameters
+    │   │               └── sub-<subject>_ses-<session>_<entities>_eddy.nii.gz
+    │   ├── eddy_quad
+    │   │   └── sub-<subject>_ses-<session>_<entities>
+    │   │       ├── avg_b0.png
+    │   │       ├── avg_b1000.png
+    │   │       ├── avg_b2000.png
+    │   │       ├── avg_b3000.png
+    │   │       ├── cnr0000.nii.gz.png
+    │   │       ├── cnr0001.nii.gz.png
+    │   │       ├── cnr0002.nii.gz.png
+    │   │       ├── cnr0003.nii.gz.png
+    │   │       ├── eddy_msr.txt
+    │   │       ├── qc.json
+    │   │       ├── qc.pdf
+    │   │       ├── ref_list.png
+    │   │       └── ref.txt
+    │   ├── hd_bet
+    │   │   └── sub-<subject>
+    │   │       └── ses-<session>
+    │   │           └── anat
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_T1w_brain_mask.nii.gz
+    │   │               └── sub-<subject>_ses-<session>_<entities>_T1w_brain.nii.gz
+    │   ├── mriqc
+    │   │   ├── logs
+    │   │   │   └── ...  # log files in case MRIQC crashes
+    │   │   ├── sub-<subject>
+    │   │   │   ├── figures
+    │   │   │   │   ├── sub-<subject>_ses-<session>_<entities>_<suffix>.svg
+    │   │   │   │   └── ...
+    │   │   │   └── ses-<session>
+    │   │   │       ├── <modality>
+    │   │   │       │   └── sub-<subject>_ses-<session>_<entities>_<suffix>.json
+    │   │   │       └── ...
+    │   │   ├── dataset_description.json
+    │   │   ├── quality_control.tsv
+    │   │   ├── sub-<subject>_ses-<session>_qc.yaml
+    │   │   ├── sub-<subject>_ses-<session>_<entities>_<suffix>.html
+    │   │   └── ...
+    │   ├── mrtrix3
+    │   │   └── sub-<subject>
+    │   │       └── ses-<session>
+    │   │           └── dwi
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_bias.mif
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_dwi_brain_mask.nii.gz
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_dwi_brain.nii.gz
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_dwi_denoise.mif
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_dwidnbcdegibbs.mif
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_dwidnbcdg.nii.gz
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_dwidnbc.mif
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_dwi_mask.mif
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_dwi.mif
+    │   │               ├── sub-<subject>_ses-<session>_<entities>_nodif.nii.gz
+    │   │               └── sub-<subject>_ses-<session>_<entities>_noise.mif
+    │   └── synb0_disco
+    │       └── sub-<subject>_ses-<session>_<entities>
+    │           ├── ANTS0GenericAffine.mat
+    │           ├── ANTS1InverseWarp.nii.gz
+    │           ├── ANTS1Warp.nii.gz
+    │           ├── b0_all.nii.gz
+    │           ├── b0_all.topup_log
+    │           ├── b0_all_topup.nii.gz
+    │           ├── b0_d_lin_atlas_2_5.nii.gz
+    │           ├── b0_d_nonlin_atlas_2_5.nii.gz
+    │           ├── b0_d_smooth.nii.gz
+    │           ├── b0_u_lin_atlas_2_5_FOLD_1.nii.gz
+    │           ├── b0_u_lin_atlas_2_5_FOLD_2.nii.gz
+    │           ├── b0_u_lin_atlas_2_5_FOLD_3.nii.gz
+    │           ├── b0_u_lin_atlas_2_5_FOLD_4.nii.gz
+    │           ├── b0_u_lin_atlas_2_5_FOLD_5.nii.gz
+    │           ├── b0_u_lin_atlas_2_5_merged.nii.gz
+    │           ├── b0_u_lin_atlas_2_5.nii.gz
+    │           ├── b0_u.nii.gz
+    │           ├── epi_reg_d_ANTS.txt
+    │           ├── epi_reg_d.mat
+    │           ├── T1_mask.nii.gz
+    │           ├── T1_norm_lin_atlas_2_5.nii.gz
+    │           ├── T1_norm.nii.gz
+    │           ├── T1_norm_nonlin_atlas_2_5.nii.gz
+    │           ├── topup_fieldcoef.nii.gz
+    │           └── topup_movpar.txt
     ├── sub-<subject>
     │   └── ses-<session>
     │       ├── <modality>
@@ -88,6 +174,8 @@ Once the workflow has completed, results are organised as follows:
     │       └── sub-<subject>_ses-<session>_scans.tsv
     ├── CHANGES
     ├── dataset_description.json
+    ├── participants.json
+    ├── participants.tsv
     ├── README
     └── scans.json
 ```
