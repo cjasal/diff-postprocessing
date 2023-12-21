@@ -11,7 +11,7 @@ In a terminal, clone this repository within your project folder:
 
 ```
 cd /nesi/project/PROJECTID/$USER
-git clone https://github.com/Mtay316/diff-processing.git
+git clone https://github.com/MataiMRI/diff-processing.git
 ```
 
 where `PROJECTID` is your project number (e.g. `uoa03264`).

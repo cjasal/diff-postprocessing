@@ -1,6 +1,6 @@
 # DTI processing workflow
 
-This repository provides a Snakemake workflow to TODO.
+This repository provides a Snakemake workflow to preprocess diffusion MRI data.
 
 
 ## Installation
@@ -17,7 +17,7 @@ To run this workflow on your workstation, you need to install the following soft
 Clone this repository using:
 
 ```
-git clone https://github.com/Mtay316/diff-processing.git
+git clone https://github.com/MataiMRI/diff-processing.git
 ```
 
 Then edit the configuration file `config/config.yml`, setting the following entries:
@@ -42,9 +42,83 @@ Use a dry-run to check that installation and configuration is working:
 snakemake -n
 ```
 
-## Available workflow
 
-TODO detail multiple passes etc.
+## Formats
+
+The workflow assumes that input scan data are:
+
+- folders or .zip files (you can mix both),
+- stored in the `datadir` folder configured `config/config.yml`,
+- they are named using the convention `<ethics_prefix>_<subject>_<session>`, where
+  - `<ethics_prefix>` is set in [`config/config.yml`](config/config.yml),
+  - `<session>` can be omitted, but will then be considered as `a`.
+
+Within a input folder (or .zip file), only the parent folder of DICOM files will be kept when tidying the data.
+Any other level of nesting will be ignored.
+
+Once the workflow has completed, results are organised as follows:
+
+```
+<resultsdir>
+└── bids
+    ├── derivatives
+    │   └── mriqc
+    │       ├── logs
+    │       │   └── ...  # log files in case MRIQC crashes
+    │       ├── sub-<subject>
+    │       │   ├── figures
+    │       │   │   ├── sub-<subject>_ses-<session>_<entities>_<suffix>.svg
+    │       │   │   └── ...
+    │       │   └── ses-<session>
+    │       │       ├── <modality>
+    │       │       │   └── sub-<subject>_ses-<session>_<entities>_<suffix>.json
+    │       │       └── ...
+    │       ├── dataset_description.json
+    │       ├── quality_control.tsv
+    │       ├── sub-<subject>_ses-<session>_qc.yaml
+    │       ├── sub-<subject>_ses-<session>_<entities>_<suffix>.html
+    │       └── ...
+    ├── sub-<subject>
+    │   └── ses-<session>
+    │       ├── <modality>
+    │       │   ├── sub-<subject>_ses-<session>_<entities>_<suffix>.json
+    │       │   ├── sub-<subject>_ses-<session>_<entities>_<suffix>.nii.gz
+    │       │   └── ...
+    │       ├── ...
+    │       └── sub-<subject>_ses-<session>_scans.tsv
+    ├── CHANGES
+    ├── dataset_description.json
+    ├── README
+    └── scans.json
+```
+
+where
+
+- `<resultsdir>` is the results directory configured in `config/config.yaml`
+- `<subject>` is a subject,
+- `<session>` is a subject's session,
+- `<modality>` is a modality (e.g. `anat` or `dwi`),
+- `<entities>` are BIDs entities (`task`, `run`, etc.),
+- `<suffix>` is a BIDs suffix, either `T1w`, `T2w`, `dwi` or `bold`.
+
+TODO explain the QC files (copy from tidySnake?)
+
+TODO detail the key output files
+
+
+## Workflow
+
+The complete workflow consists of multiple steps depicted in the following graph.
+
+![Workflow graph](rulegraph.png)
+
+*Workflow graph generated with `snakemake --rulegraph | dot -Tpng > rulegraph.png`.*
+
+The role of each step is the following:
+
+- TODO explain each step (copy some from tidySnake?)
+
+When possible, each step is run independently for each run, task and session of a subject.
 
 
 ## Useful Snakemake options
