@@ -100,6 +100,11 @@ Once the workflow has completed, results are organised as follows:
     │   │       ├── qc.pdf
     │   │       ├── ref_list.png
     │   │       └── ref.txt
+    │   ├── eddy_squad
+    │   │   ├── group_db.json
+    │   │   ├── group_qc.pdf
+    │   │   ├── ref.txt
+    │   │   └── ref_list.png
     │   ├── hd_bet
     │   │   └── sub-<subject>
     │   │       └── ses-<session>
@@ -192,6 +197,8 @@ where
 TODO explain the QC files (copy from tidySnake?)
 
 TODO detail the key output files
+
+TODO add a note that eddy squad is only run if more than one recording
 
 
 ## Workflow
