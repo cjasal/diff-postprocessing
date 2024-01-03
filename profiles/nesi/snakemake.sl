@@ -13,7 +13,7 @@ set -euo pipefail
 
 # load environment modules
 module purge
-module load Mamba/23.1.0-1 Apptainer/1.1.9 snakemake/7.26.0-gimkl-2022a-Python-3.11.3
+module load Mamba/23.1.0-1 Apptainer/1.1.9 snakemake/7.32.3-gimkl-2022a-Python-3.11.3
 
 # ensure user's local Python packages are not overriding Python module packages
 export PYTHONNOUSERSITE=1
@@ -38,4 +38,8 @@ mkdir -p "$APPTAINER_CACHEDIR" "$APPTAINER_TMPDIR"
 setfacl -b "$APPTAINER_TMPDIR"  # avoid apptainer issues due to ACLs set on this folder
 
 # run snakemake using the NeSI profile
-snakemake --profile profiles/nesi --config account="$SLURM_JOB_ACCOUNT" $@
+snakemake \
+    --profile profiles/nesi \
+    --workflow-profile profiles/nesi \
+    --config account="$SLURM_JOB_ACCOUNT" \
+    "$@"
