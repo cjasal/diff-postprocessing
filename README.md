@@ -264,21 +264,6 @@ snakemake --unlock
 Use it only when recommended to to so ;-).*
 
 
-## Formats
-
-The workflow assumes that input scan data are:
-
-- folders or .zip files (you can mix both),
-- stored in the `datadir` folder configured [`config/config.yml`](config/config.yml),
-- they are named using the convention `<ethics_prefix>_<subject>_<session>`, where
-
-  - `<ethics_prefix>` is set in [`config/config.yml`](config/config.yml),
-  - `<session>` can be omitted, but will then be considered as `a`.
-
-Within a input folder (or .zip file), only the parent folder of DICOM files will be kept when tidying the data.
-Any other level of nesting will be ignored.
-
-
 ## Maintenance
 
 TODO replace with currently available environments
