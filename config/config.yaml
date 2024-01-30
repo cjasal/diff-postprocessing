@@ -7,6 +7,9 @@ acqparams: "config/acqparams.txt"
 index: "config/index.txt"
 fs_license: "config/fs_license.txt"
 
+qc_status:
+    skip_mriqc: False  # if True, skip MRIQC reports generation, only make QC status files
+    default: False  # default value for entries in QC status files
 
 heudiconv:
     heuristic: config/heuristic.py
