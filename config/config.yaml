@@ -1,7 +1,7 @@
-ethics_prefix: "Conc_20Ntb14_"
+ethics_prefix: "Merp11360_"
 
-datadir: "/nesi/nobackup/uoa03264/mtay316/dti_pipeline_data/dicom_mary"
-resultsdir: "/nesi/nobackup/uoa03264/mtay316/dti_pipeline_data/processed_mary"
+datadir: "/nesi/nobackup/uoa04027/dicom_mtay316"
+resultsdir: "/nesi/nobackup/uoa04027/Processed_mtay316"
 
 acqparams: "config/acqparams.txt"
 index: "config/index.txt"
