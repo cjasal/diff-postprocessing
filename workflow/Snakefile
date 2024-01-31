@@ -277,7 +277,7 @@ rule eddy_quad:
 rule quad_folders:
     localrule: True
     input:
-        lambda wilcards: eddy_qc_folders(wilcards.resultsdir)
+        lambda wilcards: eddy_quad_folders(wilcards.resultsdir)
     output:
         temp("{resultsdir}/bids/derivatives/eddy_quad_folders.txt")
     run:
