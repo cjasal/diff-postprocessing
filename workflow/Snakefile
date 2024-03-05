@@ -10,7 +10,7 @@ def strip_extensions(filename):
 
 module tidy_snake:
     snakefile:
-        github("MataiMRI/tidySnake", path="workflow/Snakefile", tag="v0.6.0")
+        github("MataiMRI/tidySnake", path="workflow/Snakefile", tag="v0.7.0")
     config: config
 
 use rule * from tidy_snake as tidy_snake_*
