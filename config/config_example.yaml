@@ -1,10 +1,10 @@
-ethics_prefix: "Conc_20Ntb14_"
-datadir: "/nesi/nobackup/uoa03264/mtay316/dti_pipeline_data/dicom_mary"
-resultsdir: "/nesi/nobackup/uoa03264/mtay316/dti_pipeline_data/processed_mary"
+ethics_prefix: "ETHICS_PREFIX_"  # prefix to dicom folders and .zip files to be selected
+datadir: "DICOM_FOLDER"  # input folders containing folders of dicoms
+resultsdir: "RESULTS_FOLDER"  # results folder for BIDS formatted data
 
-acqparams: "config/acqparams.txt"
-index: "config/index.txt"
-fs_license: "config/fs_license.txt"
+acqparams: "config/acqparams.txt"  # TODO document
+index: "config/index.txt"  # TODO document
+fs_license: "LICENSE.txt"  # replace this placeholder with yout freesurfer licence file
 
 qc_status:
     skip_mriqc: False  # if True, skip MRIQC reports generation, only make QC status files
