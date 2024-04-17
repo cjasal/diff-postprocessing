@@ -5,3 +5,4 @@
 .nv
 __pycache__
 logs
+config/config.yaml
