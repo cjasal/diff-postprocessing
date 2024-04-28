@@ -2,8 +2,8 @@ ethics_prefix: "ETHICS_PREFIX_"  # prefix to dicom folders and .zip files to be 
 datadir: "DICOM_FOLDER"  # input folders containing folders of dicoms
 resultsdir: "RESULTS_FOLDER"  # results folder for BIDS formatted data
 
-acqparams: "config/acqparams.txt"  # TODO document
-index: "config/index.txt"  # TODO document
+acqparams: "config/acqparams.txt"  # aquisition parameter file for Eddy and SynB0-DISCO
+index: "config/index.txt"  # index file for Eddy
 fs_license: "LICENSE.txt"  # replace this placeholder with yout freesurfer licence file
 
 qc_status:
