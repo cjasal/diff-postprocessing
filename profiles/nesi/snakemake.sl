@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=dti_workflow
 #SBATCH --time=02-00:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=4GB
-#SBATCH --output=logs/nesi/%j-%x.out
-#SBATCH --error=logs/nesi/%j-%x.out
-#SBATCH --dependency=singleton
+#SBATCH --output=logs/%j-%x.out
+#SBATCH --error=logs/%j-%x.out
 
 # exit on errors, undefined variables and errors in pipes
 set -euo pipefail
