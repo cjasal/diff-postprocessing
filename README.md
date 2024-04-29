@@ -268,14 +268,3 @@ snakemake --unlock
 
 *Note: This last hint will be mentioned to you by `snakemake` itself.
 Use it only when recommended to to so ;-).*
-incomplete --until bias_correction
-```
-
-Unlock the folder, in case `snakemake` had to be interrupted abruptly previously:
-
-```
-snakemake --unlock
-```
-
-*Note: This last hint will be mentioned to you by `snakemake` itself.
-Use it only when recommended to to so ;-).*
