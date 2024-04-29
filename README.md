@@ -22,7 +22,14 @@ Clone this repository using:
 git clone https://github.com/MataiMRI/diff-processing.git
 ```
 
-Then edit the configuration file `config/config.yml`, setting the following entries:
+Then copy the configuration file `config/config_example.yml` into `config/config.yaml`:
+
+```
+cd diff-processing
+cp config/config_example.yaml config/config.yaml
+```
+
+and set the following entries:
 
 - the ethics prefix `ethics_prefix` for your input files,
 - the input data folder `datadir`,
