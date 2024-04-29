@@ -10,9 +10,11 @@ This repository provides a Snakemake workflow to preprocess diffusion MRI data.
 To run this workflow on your workstation, you need to install the following softwares:
 
 - `mamba`, a fast cross-platform package manager (see [installation instructions](https://mamba.readthedocs.io/en/latest/installation.htm))
-- `apptainer`, a container system (see [installation instructions](https://apptainer.org/docs/admin/main/installation.html))
+- `apptainer` (version 7), a container system (see [installation instructions](https://apptainer.org/docs/admin/main/installation.html))
 - `snakemake`, the workflow management system (see [installation instructions](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html))
 - `git`, the distributed version control system (see [download page](https://git-scm.com/downloads))
+
+**Important:** This workflow has been developed for Snakemake version 7 and has not beed tested with Snakemake 8.
 
 Clone this repository using:
 
