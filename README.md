@@ -257,7 +257,7 @@ snakemake --configfile config/alternative_config.yaml
 All these options can be combined and used with a profile, for example:
 
 ```
-snakemake --profile profiles/local --keep-incomplete --until bias_correction
+snakemake --keep-incomplete --until bias_correction --configfile config/alternative_config.yaml
 ```
 
 Unlock the folder, in case `snakemake` had to be interrupted abruptly previously:
