@@ -1,6 +1,6 @@
 # DTI processing workflow
 
-This repository provides a Snakemake workflow to preprocess diffusion MRI data.
+This repository provides a Snakemake workflow to postpreprocess diffusion MRI data. It requires a T1 and diffusion MRI data from each subject. 
 
 
 ## Installation
