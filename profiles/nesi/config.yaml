@@ -12,11 +12,10 @@ cluster:
         --job-name snakejob-{rule}
         {resources.slurm_extra}
 default-resources:
-    - partition=milan
     - cpus=1
     - gpu="0"
     - mem_mb=512
-    - runtime=5
+    - runtime=120
     - slurm_extra=""
 cluster-status: "slurm-status.py"
 cluster-sidecar: "slurm-sidecar.py"

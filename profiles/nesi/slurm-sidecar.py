@@ -125,9 +125,18 @@ class PollSqueueThread(threading.Thread):
         if try_num >= self.max_tries:
             raise Exception("Problem with call to %s" % cmd)
         else:
-            parsed = {x.split("|")[0]: x.split("|")[1] for x in output.strip().split("\n")}
-            logger.debug("Returning state of %s as %s", jobid, parsed[jobid])
-            return parsed[jobid]
+            parsed = {}
+            for x in output.strip().split("\n"):
+                parts = x.strip().split("|")
+                if len(parts) < 2:
+                    continue  # skip lines that don't have expected format
+                parsed[parts[0]] = parts[1]
+            logger.debug("Returning state of %s as %s", jobid, parsed.get(jobid, "UNKNOWN"))
+            return parsed.get(jobid, "UNKNOWN")
+        # else:
+        #     parsed = {x.split("|")[0]: x.split("|")[1] for x in output.strip().split("\n")}
+        #     logger.debug("Returning state of %s as %s", jobid, parsed[jobid])
+        #     return parsed[jobid]
 
     def stop(self):
         """Flag thread to stop execution"""
